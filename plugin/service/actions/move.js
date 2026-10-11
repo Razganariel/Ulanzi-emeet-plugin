@@ -14,8 +14,8 @@
  * limit does nothing instead of wrapping to the other end.
  */
 
-import { AXIS, AXIS_POLARITY, ACTION, DEFAULT_MOVE_STEP, DEFAULT_ZOOM_STEP } from '../core/constants.js';
-import { stepSize } from '../core/params.js';
+import { AXIS, ACTION, DEFAULT_MOVE_STEP, DEFAULT_ZOOM_STEP, PAN_DIRECTION } from '../core/constants.js';
+import { driverPolarity, stepSize } from '../core/params.js';
 
 /** action uuid -> [axis, physical direction] */
 const MOVE_BY_UUID = Object.freeze({
@@ -32,7 +32,12 @@ export const uuids = Object.keys(MOVE_BY_UUID);
 /** Zoom's default is half of pan's, because its usable range is narrower. */
 export function defaultsFor(uuid) {
   const [axis] = MOVE_BY_UUID[uuid] || [];
-  return { stepSize: axis === AXIS.ZOOM ? DEFAULT_ZOOM_STEP : DEFAULT_MOVE_STEP };
+  const defaults = { stepSize: axis === AXIS.ZOOM ? DEFAULT_ZOOM_STEP : DEFAULT_MOVE_STEP };
+  // Pan is the one axis whose direction the user gets to choose, so its default is seeded
+  // like any other setting: the panel shows it, and a key that has never been touched still
+  // moves the way the panel says it does.
+  if (axis === AXIS.PAN) defaults.panDirection = PAN_DIRECTION.NORMAL;
+  return defaults;
 }
 
 /** One press, one movement. */
@@ -41,7 +46,7 @@ export async function onRun(ctx) {
   if (!move) return;
   const [axis, direction] = move;
   const step = stepSize(ctx.settings.stepSize, defaultsFor(ctx.uuid).stepSize);
-  await ctx.camera.move(axis, direction * AXIS_POLARITY[axis] * step);
+  await ctx.camera.move(axis, direction * driverPolarity(axis, ctx.settings) * step);
 }
 
 /** Nothing to draw: the icon is the direction, and the host owns the key. */

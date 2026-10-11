@@ -49,6 +49,17 @@ const settle = () => new Promise((resolve) => setTimeout(resolve, ENCODER_FLUSH_
 /** Long enough for a 300ms threshold to have elapsed. */
 const held = () => new Promise((resolve) => setTimeout(resolve, 360));
 
+/**
+ * How each of the tilt and zoom actions is driven, so a loop can exercise both kinds.
+ * Keys answer a press, encoders answer a notch.
+ */
+const REACHABLE = {
+  [ACTION.TILT_DOWN]: (ctx) => findByUuid(ACTION.TILT_DOWN).onRun(ctx),
+  [ACTION.TILT_ENCODER]: (ctx) => encoder.onDialRotate(ctx, { rotateEvent: 'right' }),
+  [ACTION.ZOOM_OUT]: (ctx) => findByUuid(ACTION.ZOOM_OUT).onRun(ctx),
+  [ACTION.ZOOM_ENCODER]: (ctx) => encoder.onDialRotate(ctx, { rotateEvent: 'right' }),
+};
+
 test('every action in the manifest is registered', async () => {
   const manifest = JSON.parse(
     await (await import('node:fs/promises')).readFile(new URL('../plugin/manifest.json', import.meta.url), 'utf8')
@@ -76,6 +87,50 @@ test('pan and tilt move one step in the right direction', async () => {
     await findByUuid(uuid).onRun(ctx);
     assert.deepEqual(bridge.last('move'), { cmd: 'move', axis, delta }, `${uuid}`);
   }
+});
+
+test('the pan direction a user chooses is applied to the pan keys', async () => {
+  // `normal` is what the camera does as measured; `inverted` is for anyone who wants the
+  // opposite feel. Both have to work, or the setting is decoration.
+  const normal = ctxFor(ACTION.PAN_LEFT);
+  await findByUuid(ACTION.PAN_LEFT).onRun(normal.ctx);
+  const inverted = ctxFor(ACTION.PAN_LEFT, { panDirection: 'inverted' });
+  await findByUuid(ACTION.PAN_LEFT).onRun(inverted.ctx);
+
+  assert.equal(normal.bridge.last('move').delta, 10, 'normal moves left');
+  assert.equal(inverted.bridge.last('move').delta, -10, 'inverted moves right');
+});
+
+test('the pan direction does not touch tilt or zoom', async () => {
+  // A preference that silently changed an axis it was never offered on would be a bug
+  // nobody could report usefully: tilt and zoom conform to the spec and are not negotiable.
+  for (const uuid of [ACTION.TILT_DOWN, ACTION.TILT_ENCODER, ACTION.ZOOM_OUT, ACTION.ZOOM_ENCODER]) {
+    const straight = ctxFor(uuid, { stepSize: 5 });
+    await REACHABLE[uuid](straight.ctx);
+    await settle(); // the encoders only queue; the movement goes out on the flush
+    const inverted = ctxFor(uuid, { stepSize: 5, panDirection: 'inverted' });
+    await REACHABLE[uuid](inverted.ctx);
+    await settle();
+
+    assert.equal(
+      straight.bridge.last('move').delta,
+      inverted.bridge.last('move').delta,
+      `${uuid} ignores a pan setting it does not have`
+    );
+  }
+});
+
+test('the pan direction a user chooses is applied to the pan dial', async () => {
+  const straight = ctxFor(ACTION.PAN_ENCODER, { stepSize: 5 });
+  encoder.onDialRotate(straight.ctx, { rotateEvent: 'right' });
+  await settle();
+
+  const flipped = ctxFor(ACTION.PAN_ENCODER, { stepSize: 5, panDirection: 'inverted' });
+  encoder.onDialRotate(flipped.ctx, { rotateEvent: 'right' });
+  await settle();
+
+  assert.equal(straight.bridge.last('move').delta, -5);
+  assert.equal(flipped.bridge.last('move').delta, 5, 'the dial follows the preference');
 });
 
 test('a key and its encoder move the head the same way', async () => {

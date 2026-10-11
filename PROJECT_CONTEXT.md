@@ -1973,3 +1973,67 @@ Le commentaire de core/constants.js porte cette condition.
 - UNVERIFIED : l'intention d'EMEET. Aucune source disponible depuis cette machine.
 - UNVERIFIED : le comportement d'EMEET Studio pour le pan. Le tester reAuditerait si EMEET
   fait la meme negation, mais ne repondrait pas a la question d'intention.
+---
+
+# 51 - Parametre utilisateur « Sens de panoramique » (2026-10-11)
+
+Demande utilisateur : pouvoir choisir le sens du panoramique, plutot que de subir celui
+qui est code en dur.
+
+## Pourquoi
+
+Le §50 a montre que la polarite du pan est une non-conformite du firmware. La corriger en
+dur règle le probleme pour tout le monde, mais :
+
+- un utilisateur peut preferer l'autre sens, sans avoir de raison technique de le demander ;
+- si EMEET corrige un jour le signe, tous ceux qui ont choisi « normal » retinse
+  immediatement, et ceux qui avaient choisi « inverse » se retrouvent enfin justes sans
+  rien avoir change. Le reglage rend la correction future non cassante.
+
+## Perimetre
+
+Trois actions, les seules quiRegexistent un reglage panDirection :
+
+- Pan Left, Pan Right — panneau property-inspector/pixyMove/pan.html
+- Pan (Encodeur) — panneau property-inspector/pixyEncoder/pan.html
+
+Valeurs : 
+ormal (defaut, ce que fait la camera mesure au §49) et inverted.
+
+**Tilt et zoom n'ont pas ce reglage.** Ils sont conformes a la convention documentee : il
+n'y a rien a choisir, et une preference qui ne change rien est pire qu'absence de
+preference. Un test verifie que le champ n'apparait que sur les trois actions pan.
+
+## Point de conception : deux panneaux de deplacement au lieu d'un
+
+pixyMove/inspector.html etait partage par Pan et Tilt parce que leurs reglages de pas
+etaient identiques (§43). Ajouter une option propre au pan oblige a les separer :
+pan.html et 	ilt.html, avec zoom.html deja existant. Les fichiers restent symetriques
+et un test garantit que Pan et Tilt ne partagent plus de panneau.
+
+## Point de conception : une seule conversion
+
+Les touches et les encodeurs pilotaient chacun leur polarite (§49). Le reglage utilisateur
+serait donc propage a deux endroits, avec le meme risque de derive que deja constate.
+driverPolarity(axis, settings) dans core/params.js est desormais le point unique ou un
+axe devient une valeur pilote : polarite camera, puis preference de l'utilisateur.
+
+## Non couvert, volontairement
+
+L'action PTZ Encoder (cyclique) deplace aussi le panoramique lorsqu'elle est sur cet axe,
+mais son panneau est partage avec les encodeurs Tilt et Zoom, ou le reglage n'a pas de sens.
+Elle n'est donc pas concernee. Consequence : un utilisateur qui choisit « inverse » sur les
+touches Pan constatera que l'encodeur PTZ, lui, garde le sens normal quand il est sur Pan.
+
+## Statuts
+
+- CONFIRMED : le reglage est applique aux touches Pan et a l'encodeur Pan, et n'affecte ni
+  Tilt ni Zoom. Verifie par mutation : rendre le reglage inoperant cote encodeur fait
+  echouer 3 tests ; le rendre applicable a tous les axes fait echouer le test qui verifie
+  que Tilt et Zoom l'ignorent.
+- CONFIRMED : le champ n'apparait que sur les trois panneaux pan.
+- UNVERIFIED : le comportement dans Ulanzi Studio — le select n'a pas ete ouvert sur la
+  machine. La valeur voyage par le canal habituel (didReceiveSettings), deja couvert par
+  les tests, mais le rendu du panneau n'a pas ete vu.
+- LIKELY : un utilisateur choisira "inverse" sur les boutons Pan et remarquera que
+  l'encodeur PTZ ne suit pas. A confirmer, puis etendre si besoin.

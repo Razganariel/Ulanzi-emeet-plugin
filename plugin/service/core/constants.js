@@ -47,6 +47,23 @@ export const AXIS_POLARITY = Object.freeze({
   [AXIS.ZOOM]: 1,
 });
 
+/**
+ * The pan direction a user can choose, on the pan actions only.
+ *
+ * `NORMAL` is what the camera does as measured, which is what the table above already
+ * compensates for. `INVERTED` flips the keys and the pan dial, for anyone who wants the
+ * opposite feel. Tilt and zoom conform to the specification and are not negotiable, which
+ * is why this setting does not exist on them: a preference that does nothing is worse than
+ * no preference.
+ */
+export const PAN_DIRECTION = Object.freeze({
+  NORMAL: 'normal',
+  INVERTED: 'inverted',
+});
+
+/** Offered by the pan property inspectors. */
+export const PAN_DIRECTIONS = Object.freeze([PAN_DIRECTION.NORMAL, PAN_DIRECTION.INVERTED]);
+
 export const ACTION = Object.freeze({
   PAN_LEFT: `${PLUGIN_UUID}.panleft`,
   PAN_RIGHT: `${PLUGIN_UUID}.panright`,

@@ -24,6 +24,7 @@ const PLUGIN = path.join(ROOT, 'plugin');
 const manifest = JSON.parse(readFileSync(path.join(PLUGIN, 'manifest.json'), 'utf8'));
 const pkg = JSON.parse(readFileSync(path.join(PLUGIN, 'package.json'), 'utf8'));
 const { registry } = await import('../plugin/service/actions/index.js');
+const { ACTION } = await import('../plugin/service/core/constants.js');
 
 const exists = (relative) => existsSync(path.join(PLUGIN, relative));
 
@@ -162,4 +163,34 @@ test('the runtime dependency the SDK needs is declared', () => {
   // installs whatever is listed here into the bundle.
   assert.ok(pkg.dependencies?.ws, 'ws is declared');
   assert.equal(pkg.type, 'module', 'the service is ESM');
+});
+
+test('the pan direction is offered on the pan actions and nowhere else', () => {
+  // The preference has to be reachable where it applies, and absent where it does not: a
+  // select that changes nothing is worse than no select. Tilt and zoom conform to the
+  // documented sign, so there is nothing there to choose.
+  const PAN_ACTIONS = [ACTION.PAN_LEFT, ACTION.PAN_RIGHT, ACTION.PAN_ENCODER];
+  const panelOf = (uuid) => manifest.Actions.find((action) => action.UUID === uuid).PropertyInspectorPath;
+  const hasField = (uuid) => {
+    const html = readFileSync(path.join(PLUGIN, panelOf(uuid)), 'utf8');
+    return /name="panDirection"/.test(html);
+  };
+
+  for (const uuid of PAN_ACTIONS) {
+    assert.ok(hasField(uuid), `${uuid} offers the pan direction`);
+  }
+
+  const others = manifest.Actions
+    .filter((action) => action.PropertyInspectorPath && !PAN_ACTIONS.includes(action.UUID))
+    .map((action) => action.UUID);
+  const wrong = others.filter((uuid) => hasField(uuid));
+  assert.deepEqual(wrong, [], `\n${wrong.join('\n')}\n`);
+});
+
+test('pan and tilt no longer share a property inspector', () => {
+  // They used to, because their step settings were identical. Pan now carries a setting
+  // tilt has no use for, so one shared panel would offer tilt a control that does nothing.
+  const panelOf = (uuid) => manifest.Actions.find((action) => action.UUID === uuid).PropertyInspectorPath;
+  assert.notEqual(panelOf(ACTION.PAN_LEFT), panelOf(ACTION.TILT_UP));
+  assert.equal(panelOf(ACTION.PAN_LEFT), panelOf(ACTION.PAN_RIGHT), 'the pan keys share one panel');
 });

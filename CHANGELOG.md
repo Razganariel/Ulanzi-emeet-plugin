@@ -13,7 +13,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   four encoder actions (a mode-cycling encoder plus one encoder bound to pan, to tilt
   or to zoom), a start position and five presets (short press recalls, long press
   stores), and the three camera modes (standard, tracking, privacy).
-- 104 tests over `npm test`, none of which need a camera, a deck or the helper binary.
+- **A "Pan Direction" setting on the pan keys and the pan dial**, normal or inverted. The
+  camera's pan sign is a firmware non-conformance (section 50), so the correction was
+  hardcoded — which left anyone who prefers the other feel with no way out, and would have
+  broken for everyone the day EMEET fixed it. Tilt and zoom conform to the specification and
+  get no such setting: a preference that changes nothing is worse than none.
+- 110 tests over `npm test`, none of which need a camera, a deck or the helper binary.
 
 ### Fixed
 

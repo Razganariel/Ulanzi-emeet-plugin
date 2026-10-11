@@ -33,12 +33,12 @@ au flux vidéo : **OBS continue de capturer la PIXY comme une webcam normale**.
 
 | Action | Key / dial — Touche / molette | Settings — Réglages |
 |---|---|---|
-| **Pan Left** / **Pan Right** | key: one step — touche : un cran | step — pas |
+| **Pan Left** / **Pan Right** | key: one step — touche : un cran | step, pan direction — pas, sens du panoramique |
 | **Tilt Up** / **Tilt Down** | key: one step — touche : un cran | step — pas |
 | **Zoom In** / **Zoom Out** | key: one step — touche : un cran | step — pas |
 | **Center** | key: back to the head's own defaults — touche : retour aux défauts de la tête | — |
 | **PTZ Encoder** | dial: rotate to move, press to change axis — molette : rotation = déplacement, appui = changement d'axe | step — pas |
-| **Pan / Tilt / Zoom Encoder** | dial: rotate to move that axis, press to recentre — molette : rotation = cet axe, appui = recentrer | step — pas |
+| **Pan / Tilt / Zoom Encoder** | dial: rotate to move that axis, press to recentre — molette : rotation = cet axe, appui = recentrer | step, pan direction — pas, sens du panoramique |
 | **Start** | key: short press recalls, long press stores — appui court : rappelle, appui long : enregistre | long press — appui long |
 | **Preset 1** … **Preset 5** | idem, five separate keys — idem, cinq touches séparées | long press — appui long |
 | **Mode Standard** | key: manual mode (HID) — touche : mode manuel (HID) | — |
@@ -63,6 +63,28 @@ Le pilote n'expose que le mode `Manual` sur ces trois contrôles ; les modes sta
 suivi / confidentiel sont des commandes HID distinctes. Chaque valeur envoyée est une
 *requête* : le helper la borne à la plage ci-dessus, donc une touche pressée en butée ne
 fait rien au lieu de revenir à l'autre extrémité.
+
+### Pan direction
+
+This camera's pan sign does not match the documented one. Windows documents
+`CameraControl_Pan` as *positive = clockwise seen from above*, which is to the **right**,
+and this camera does the opposite — its tilt conforms, so only pan is inverted. The
+correction is built in, and `Pan Left` moves the head left.
+
+`Pan Direction` on the pan keys and the pan dial lets you choose the opposite instead.
+Tilt and zoom do not have the setting: they follow the specification, so there is nothing
+to choose.
+
+Le signe du panoramique de cette caméra ne correspond pas à celui documenté : Windows
+documente `CameraControl_Pan` comme *positif = horaire vu du dessus*, soit vers la
+**droite**, et cette caméra fait l'inverse. Son tilt est conforme, seul le pan est inversé.
+La correction est intégrée : `Pan Gauche` déplace la tête vers la gauche.
+
+`Sens du panoramique` sur les touches Pan et la molette Pan permet de choisir l'inverse.
+Tilt et zoom n'ont pas ce réglage : ils suivent la spécification, il n'y a rien à choisir.
+
+**If EMEET ever fixes the sign in a firmware update, delete the `pan` entry in
+`AXIS_POLARITY`.** Anyone left on `normal` would then be the only one affected.
 
 ## 3. Architecture
 

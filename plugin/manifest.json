@@ -15,7 +15,7 @@
     {
       "Name": "Pan Left",
       "Icon": "images/gradient-arrow-left.png",
-      "PropertyInspectorPath": "property-inspector/pixyMove/inspector.html",
+      "PropertyInspectorPath": "property-inspector/pixyMove/pan.html",
       "UUID": "com.ulanzi.ulanzideck.pixy.panleft",
       "Tooltip": "Faire pivoter la caméra vers la gauche",
       "state": 0,
@@ -29,7 +29,7 @@
     {
       "Name": "Pan Right",
       "Icon": "images/gradient-arrow-right.png",
-      "PropertyInspectorPath": "property-inspector/pixyMove/inspector.html",
+      "PropertyInspectorPath": "property-inspector/pixyMove/pan.html",
       "UUID": "com.ulanzi.ulanzideck.pixy.panright",
       "Tooltip": "Faire pivoter la caméra vers la droite",
       "state": 0,
@@ -43,7 +43,7 @@
     {
       "Name": "Tilt Up",
       "Icon": "images/gradient-arrow-up.png",
-      "PropertyInspectorPath": "property-inspector/pixyMove/inspector.html",
+      "PropertyInspectorPath": "property-inspector/pixyMove/tilt.html",
       "UUID": "com.ulanzi.ulanzideck.pixy.tiltup",
       "Tooltip": "Incliner la caméra vers le haut",
       "state": 0,
@@ -57,7 +57,7 @@
     {
       "Name": "Tilt Down",
       "Icon": "images/gradient-arrow-down.png",
-      "PropertyInspectorPath": "property-inspector/pixyMove/inspector.html",
+      "PropertyInspectorPath": "property-inspector/pixyMove/tilt.html",
       "UUID": "com.ulanzi.ulanzideck.pixy.tiltdown",
       "Tooltip": "Incliner la caméra vers le bas",
       "state": 0,
@@ -129,7 +129,7 @@
     {
       "Name": "Pan (Encodeur)",
       "Icon": "images/gradient-arrow-horizontal.png",
-      "PropertyInspectorPath": "property-inspector/pixyEncoder/inspector.html",
+      "PropertyInspectorPath": "property-inspector/pixyEncoder/pan.html",
       "UUID": "com.ulanzi.ulanzideck.pixy.panencoder",
       "Tooltip": "Molette Pan : rotation = pan, appui = recentrer",
       "state": 0,

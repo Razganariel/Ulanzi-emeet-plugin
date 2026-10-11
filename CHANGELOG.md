@@ -19,9 +19,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   prefers the other feel with no way out, and would have broken for everyone the day EMEET
   fixed it. Tilt and zoom conform to the specification and get no such setting: a
   preference that changes nothing is worse than none.
-- 125 tests over `npm test`, none of which need a camera, a deck or the helper binary.
+- 126 tests over `npm test`, none of which need a camera, a deck or the helper binary.
 
 ### Fixed
+- **Licensed under the GNU Affero General Public License v3.0 or later.** `LICENSE` is the
+  canonical text from gnu.org; `THIRD-PARTY.md` names what ships inside the bundle under
+  its own terms (`ws` MIT, the two Ulanzi SDKs Apache-2.0); both `package.json` files
+  declare the SPDX identifier.
+
+- **The third-party notices were being stripped from the built plugin.** `npm run sdk`
+  kept three files from each Ulanzi SDK repository and dropped the rest, which silently
+  removed their Apache-2.0 `LICENSE` files - and Apache-2.0 section 4 requires those
+  notices to travel with derived code. The installer keeps them, the build ships them as
+  `ulanzi-api/LICENSE` and `libs/LICENSE`, and a test fails if either list drops them
+  again. It had already happened once, silently.
 
 - **The property inspector panels could write settings but never read them.** They never
   asked the host for them — `connect()` sends nothing, and `didReceiveSettings` is the

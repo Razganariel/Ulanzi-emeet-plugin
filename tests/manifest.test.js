@@ -158,6 +158,23 @@ test('the registry holds exactly the actions the deck can place', () => {
   assert.deepEqual(registered, declared, 'the service answers for every action, and for nothing else');
 });
 
+test('the third-party notices are kept and shipped', () => {
+  // The SDK installer used to keep three files from each SDK repository and drop the rest,
+  // which silently removed the Apache-2.0 notices from the built plugin. Nothing failed;
+  // the notices were just gone. Apache-2.0 section 4 requires them to travel with the code,
+  // so this is checked rather than remembered.
+  const installer = readFileSync(path.join(ROOT, 'scripts', 'install-sdk.mjs'), 'utf8');
+  const build = readFileSync(path.join(ROOT, 'scripts', 'build.mjs'), 'utf8');
+
+  const keepLists = [...installer.matchAll(/keep:\s*\(\)\s*=>\s*\[([^\]]*)\]/g)];
+  assert.ok(keepLists.length >= 2, 'both SDKs are installed');
+  for (const list of keepLists) {
+    assert.match(list[1], /'LICENSE'/, `a keep list drops its LICENSE: ${list[1].trim()}`);
+  }
+
+  assert.match(build, /common-html', 'LICENSE'/, 'the inspector SDK licence is not shipped');
+});
+
 test('the runtime dependency the SDK needs is declared', () => {
   // The SDK imports `ws`; without it the service cannot even be imported, and the build
   // installs whatever is listed here into the bundle.

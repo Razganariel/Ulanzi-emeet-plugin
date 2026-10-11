@@ -94,9 +94,13 @@ async function main() {
   await cp(path.join(SDK, 'common-html', 'js'), path.join(out, 'libs', 'js'), { recursive: true });
   await cp(path.join(SDK, 'common-html', 'css'), path.join(out, 'libs', 'css'), { recursive: true });
   await cp(path.join(SDK, 'common-html', 'assets'), path.join(out, 'assets'), { recursive: true });
+  // Both SDKs are Apache-2.0, which requires their notices to travel with the code. The
+  // main service's comes along with ulanzi-api; the property inspector one's sits beside the
+  // scripts and styles it covers.
+  await cp(path.join(SDK, 'common-html', 'LICENSE'), path.join(out, 'libs', 'LICENSE'), { force: false });
   // install-sdk leaves a freshness marker behind; it has no business shipping.
   await rm(path.join(out, 'ulanzi-api', '.installed'), { force: true });
-  console.log('[build] Ulanzi SDK merged (ulanzi-api, libs/js, libs/css, assets)');
+  console.log('[build] Ulanzi SDK merged (ulanzi-api, libs/js, libs/css, assets, licences)');
 
   // Every runtime path referenced by the property inspectors must exist in the output.
   const inspectorHtml = [];

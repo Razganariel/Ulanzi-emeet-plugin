@@ -30,13 +30,16 @@ const SOURCES = [
     id: 'plugin-common-node',
     url: 'https://codeload.github.com/UlanziTechnology/plugin-common-node/zip/refs/heads/main',
     out: path.join(SDK_DIR, 'ulanzi-api'),
-    keep: () => ['index.js', 'libs', 'apiTypes.d.ts'],
+    // LICENSE is kept on purpose: the SDK is Apache-2.0, whose section 4 requires the
+    // notices to survive into anything derived from it. Dropping it here would strip them
+    // from the built plugin.
+    keep: () => ['index.js', 'libs', 'apiTypes.d.ts', 'LICENSE'],
   },
   {
     id: 'plugin-common-html',
     url: 'https://codeload.github.com/UlanziTechnology/plugin-common-html/zip/refs/heads/main',
     out: path.join(SDK_DIR, 'common-html'),
-    keep: () => ['js', 'css', 'assets'],
+    keep: () => ['js', 'css', 'assets', 'LICENSE'],
   },
 ];
 

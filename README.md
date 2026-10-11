@@ -256,4 +256,18 @@ du bridge demandent encore un essai physique.
 
 ## 10. License
 
-No license file is declared yet. Add one before publishing.
+**GNU Affero General Public License v3.0 or later** — see [LICENSE](LICENSE).
+
+That covers this project's own code. The components redistributed inside the built plugin —
+the Ulanzi SDKs (Apache-2.0) and `ws` (MIT) — keep their own licenses, their notices ship
+inside the bundle, and they are listed in [THIRD-PARTY.md](THIRD-PARTY.md).
+
+This is the strongest copyleft of the GNU family: anyone redistributing the plugin, modified
+or not, has to pass on the source under the same terms. The Affero clause — the obligation to
+offer the corresponding source to users interacting over a network — is what distinguishes it
+from GPL-3.0; for a plugin that runs locally on the user's own machine it rarely bites, but
+it does apply if the software is ever run as a service.
+
+AGPL-3.0 covers this project only. The Ulanzi SDKs are Apache-2.0, which is compatible in
+one direction only: they can be bundled here, but they cannot be relicensed under terms that
+forbid what Apache-2.0 permits.

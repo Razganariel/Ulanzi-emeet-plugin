@@ -133,6 +133,30 @@ test('the pan direction a user chooses is applied to the pan dial', async () => 
   assert.equal(flipped.bridge.last('move').delta, 5, 'the dial follows the preference');
 });
 
+test('the pan direction a user chooses applies to the cycling dial while it is on pan', async () => {
+  // The cycling knob moves three axes. The preference touches the pan one and no other,
+  // which is why it is offered on its own panel rather than on the shared one.
+  const straight = ctxFor(ACTION.ENCODER, { stepSize: 5 });
+  encoder.onDialRotate(straight.ctx, { rotateEvent: 'right' });
+  await settle();
+  assert.equal(straight.bridge.last('move').axis, AXIS.PAN);
+  assert.equal(straight.bridge.last('move').delta, -5);
+
+  const flipped = ctxFor(ACTION.ENCODER, { stepSize: 5, panDirection: 'inverted' });
+  encoder.onDialRotate(flipped.ctx, { rotateEvent: 'right' });
+  await settle();
+  assert.equal(flipped.bridge.last('move').delta, 5);
+
+  // One press moves the knob to tilt, where the preference must not apply.
+  encoder.onDialPress(flipped.ctx);
+  const before = flipped.bridge.requests.length;
+  encoder.onDialRotate(flipped.ctx, { rotateEvent: 'right' });
+  await settle();
+  const tiltMove = flipped.bridge.requests.slice(before).filter((request) => request.cmd === 'move')[0];
+  assert.equal(tiltMove.axis, AXIS.TILT);
+  assert.equal(tiltMove.delta, 5, 'tilt is unaffected');
+});
+
 test('a key and its encoder move the head the same way', async () => {
   // The invariant that the pan reversal was missing: the buttons and the encoders drive the
   // same axes, and there are two places that could each carry the polarity. Fixing one and

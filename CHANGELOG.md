@@ -13,15 +13,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   four encoder actions (a mode-cycling encoder plus one encoder bound to pan, to tilt
   or to zoom), a start position and five presets (short press recalls, long press
   stores), and the three camera modes (standard, tracking, privacy).
-- **A "Pan Direction" setting on the pan keys and the pan dial**, normal or inverted. The
-  camera's pan sign is a firmware non-conformance (section 50), so the correction was
-  hardcoded — which left anyone who prefers the other feel with no way out, and would have
-  broken for everyone the day EMEET fixed it. Tilt and zoom conform to the specification and
-  get no such setting: a preference that changes nothing is worse than none.
+- **A "Pan Direction" setting on every control that moves pan** — Pan Left, Pan Right,
+  Pan Encoder and the cycling PTZ Encoder. The camera's pan sign is a firmware
+  non-conformance (section 50), so the correction was hardcoded — which left anyone who
+  prefers the other feel with no way out, and would have broken for everyone the day EMEET
+  fixed it. Tilt and zoom conform to the specification and get no such setting: a
+  preference that changes nothing is worse than none.
 - 110 tests over `npm test`, none of which need a camera, a deck or the helper binary.
 
 ### Fixed
 
+- **A setting made in a property inspector panel is no longer undone when the key is
+  looked at again.** The host answers a panel before it announces the key, and the
+  action's defaults were merged on top of the stored settings on every add: a pan
+  direction chosen as "inverted" went back to "normal" every time the user moved to
+  another button and came back. Defaults are now applied when an entry is created and
+  never again — the only way a default can overwrite a choice without anything
+  reporting it.
 - **Pan was reversed, on both the buttons and the encoders.** Measured on the camera on
   2026-10-11: `Pan Left` and `Pan Right` moved the head the wrong way, and so did the pan
   encoder and the cycling PTZ encoder, while tilt and zoom were correct. The four symptoms

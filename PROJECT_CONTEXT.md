@@ -2037,3 +2037,64 @@ touches Pan constatera que l'encodeur PTZ, lui, garde le sens normal quand il es
   les tests, mais le rendu du panneau n'a pas ete vu.
 - LIKELY : un utilisateur choisira "inverse" sur les boutons Pan et remarquera que
   l'encodeur PTZ ne suit pas. A confirmer, puis etendre si besoin.
+---
+
+# 52 - Deux corrections du reglage « Sens de panoramique » (2026-10-11)
+
+Retour utilisateur apres la livraison du §51 : deux problemes.
+
+## 1. La selection revenait a « Normal » apres un aller-retour sur un autre bouton
+
+**Cause.** onAdd fusionnait les valeurs par defaut de l'action a **chaque** apparition
+de la cle :
+
+    mergeSettings(entry, defaultsFor(uuid));
+    mergeSettings(entry, message.param);
+
+L'hote repond au panneau de proprietes **avant** d'annoncer la cle. Les choix de
+l'utilisateur etaient donc deja dans l'entree quand les defauts venaient se poser
+dessus. Resultat : « inverted » revenait a « normal » systematiquement.
+
+**Correction.** Les defauts sont des valeurs de **creation**, pas de mise a jour.
+ensureEntry(store, context, uuid, defaults) les applique au moment ou l'entree n'existe
+pas encore, et onAdd ne fusionne plus que la copie de l'hote (message.param).
+
+**Regle plus generale.** Un defaut d'action ne doit jamais etre reapplique a une entree
+existante : c'est la seule maniere dont un defaut peut ecraser une choix utilisateur sans
+que rien ne signale l'ecrasement.
+
+**Verifie par mutation.** Reinjecter la fusion des defauts dans onAdd fait echouer
+ choice made in a panel survives the key being looked at again. Le test manquant
+precedemment est ce qui a permis au bug d'atteindre la machine.
+
+## 2. L'encodeur PTZ cyclique n'avait pas le reglage
+
+Volontairement exclu au §51, parce que son panneau etait partage avec les encodeurs Tilt
+et Zoom, ou le reglage n'a pas de sens. L'utilisateur l'a signale comme manquant.
+
+**Correction.** Panneau propre property-inspector/pixyEncoder/ptz.html, comme pan.html
+l'a ete pour l'encodeur Pan. inspector.html reste pour Tilt et Zoom.
+
+Le code n'a pas eu besoin d'etre change pour le fonctionnement : onDialRotate passe deja
+par driverPolarity(axis, settings), donc la preference de l'utilisateur
+s'applique des que le reglage existe pour l'axe courant. encoder.js expose maintenant
+defaultsFor(uuid) au lieu d'un defaults unique, pour que le defaut panDirection soit
+semé sur les deux encodeurs qui bougent le panoramique.
+
+**Portee.** Le reglage ne s'applique que lorsque la molette est sur l'axe Pan ; sur Tilt et
+Zoom elle n'a aucune effet, ce que verifie un test.
+
+## Le piege que le point 2 a revele
+
+Un encodeur « cyclique » n'est pas un encodeur d'axe : il en est trois dans un seul. Lui
+offrir le reglage demandait de separer son panneau, exactement comme Pan et Tilt l'ont
+demande pour la meme raison. La regle qui en sort : **tout reglement qui ne s'applique
+qu'a certains axes doit avoir son propre panneau**, sinon il apparait la ou il ne fait rien.
+
+## Statuts
+
+- CONFIRMED : le choix de l'utilisateur survit a un aller-retour sur un autre bouton.
+- CONFIRMED : les quatre actions qui bougent le panoramique - Pan Left, Pan Right,
+  Pan Encoder, PTZ Encoder - exposent le reglage ; les autres ne l'exposent pas.
+- CONFIRMED : le reglage ne modifie ni Tilt ni Zoom, sur aucun des quatresencodeurs.
+- UNVERIFIED : le rendu des panneaux dans Ulanzi Studio, comme au §51.

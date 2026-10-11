@@ -112,7 +112,7 @@
     {
 "Name": "PTZ Encoder",
       "Icon": "images/gradient-ptz.png",
-      "PropertyInspectorPath": "property-inspector/pixyEncoder/inspector.html",
+      "PropertyInspectorPath": "property-inspector/pixyEncoder/ptz.html",
       "UUID": "com.ulanzi.ulanzideck.pixy.encoder",
       "Tooltip": "Encodeur PTZ : rotation = déplacement, appui = changement d'axe",
       "state": 0,

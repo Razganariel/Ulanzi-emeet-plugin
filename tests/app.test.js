@@ -227,6 +227,68 @@ test('a frame with no fields at all is survivable', async () => {
   assert.doesNotThrow(() => socket.onmessage({ data: JSON.stringify({ cmd: 'run' }) }));
 });
 
+test('a choice made in a panel survives the key being looked at again', async () => {
+  // The regression this file exists for. The host answers a panel before it announces the
+  // key, so the settings were already stored when the action's defaults were merged on top
+  // of them on `add`: a pan direction chosen as "inverted" went back to "normal" every time
+  // the user moved to another button and came back.
+  const uuid = `${UUID}.panleft`;
+  const key = '8_1';
+
+  host('didReceiveSettings', { uuid, key, actionid: 's1', settings: { panDirection: 'inverted' } });
+  host('add', { uuid, key, actionid: 's1' });
+  host('keydown', { uuid, key, actionid: 's1' });
+  host('keyup', { uuid, key, actionid: 's1' });
+  await settle();
+  assert.equal(bridge.last('move').delta, -10, 'the first press used the choice');
+
+  // The user goes to another button and comes back. No settings are sent this time: the
+  // host already stored them, and the entry still holds them.
+  host('add', { uuid, key, actionid: 's1' });
+  host('didReceiveSettings', { uuid, key, actionid: 's1', settings: {} });
+  host('keydown', { uuid, key, actionid: 's1' });
+  await settle();
+
+  assert.equal(bridge.last('move').delta, -10, 'the choice is still in force');
+});
+
+test('a key that has never been configured uses the action defaults', async () => {
+  // The other side of the same rule: defaults still apply, but only to a key that has
+  // nothing stored, so a panel opened for the first time shows real values.
+  host('add', { uuid: `${UUID}.panright`, key: '8_2', actionid: 's2' });
+  host('keydown', { uuid: `${UUID}.panright`, key: '8_2', actionid: 's2' });
+  await settle();
+
+  assert.equal(bridge.last('move').delta, -10, 'the default step and the default direction');
+});
+
+test('the cycling encoder honours the pan direction while it is on pan', async () => {
+  // It moves pan like every other control, and a knob that disagreed with the pan keys
+  // would be worse than no setting at all.
+  const uuid = `${UUID}.encoder`;
+  const key = '8_3';
+
+  host('add', { uuid, key, actionid: 's3', controller: 'Encoder' });
+  host('didReceiveSettings', { uuid, key, actionid: 's3', settings: { stepSize: '5', panDirection: 'inverted' } });
+
+  const before = bridge.requests.length;
+  host('dialrotate', { uuid, key, actionid: 's3', rotateEvent: 'right' });
+  await settle();
+
+  const moves = bridge.requests.slice(before).filter((request) => request.cmd === 'move');
+  assert.equal(moves[0].axis, 'pan', 'the knob starts on pan');
+  assert.equal(moves[0].delta, 5, 'inverted, as chosen');
+
+  // And it has no effect on the axes that are not pan.
+  host('dialdown', { uuid, key, actionid: 's3' });
+  const second = bridge.requests.length;
+  host('dialrotate', { uuid, key, actionid: 's3', rotateEvent: 'right' });
+  await settle();
+  const tilt = bridge.requests.slice(second).filter((request) => request.cmd === 'move')[0];
+  assert.equal(tilt.axis, 'tilt');
+  assert.equal(tilt.delta, 5, 'tilt keeps its own sign');
+});
+
 test('the action registry and the manifest agree', async () => {
   const { registry } = await import('../plugin/service/actions/index.js');
   const { readFile } = await import('node:fs/promises');

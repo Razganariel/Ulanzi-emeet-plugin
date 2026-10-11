@@ -37,7 +37,7 @@ au flux vidéo : **OBS continue de capturer la PIXY comme une webcam normale**.
 | **Tilt Up** / **Tilt Down** | key: one step — touche : un cran | step — pas |
 | **Zoom In** / **Zoom Out** | key: one step — touche : un cran | step — pas |
 | **Center** | key: back to the head's own defaults — touche : retour aux défauts de la tête | — |
-| **PTZ Encoder** | dial: rotate to move, press to change axis — molette : rotation = déplacement, appui = changement d'axe | step — pas |
+| **PTZ Encoder** | dial: rotate to move, press to change axis — molette : rotation = déplacement, appui = changement d'axe | step, pan direction — pas, sens du panoramique |
 | **Pan / Tilt / Zoom Encoder** | dial: rotate to move that axis, press to recentre — molette : rotation = cet axe, appui = recentrer | step, pan direction — pas, sens du panoramique |
 | **Start** | key: short press recalls, long press stores — appui court : rappelle, appui long : enregistre | long press — appui long |
 | **Preset 1** … **Preset 5** | idem, five separate keys — idem, cinq touches séparées | long press — appui long |
@@ -71,7 +71,9 @@ This camera's pan sign does not match the documented one. Windows documents
 and this camera does the opposite — its tilt conforms, so only pan is inverted. The
 correction is built in, and `Pan Left` moves the head left.
 
-`Pan Direction` on the pan keys and the pan dial lets you choose the opposite instead.
+`Pan Direction` on the pan keys and both dials lets you choose the opposite instead. On the
+cycling PTZ encoder it applies while the knob is on pan, and has no effect on the other two
+axes.
 Tilt and zoom do not have the setting: they follow the specification, so there is nothing
 to choose.
 

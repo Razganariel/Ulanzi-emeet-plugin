@@ -13,7 +13,14 @@
  * flick into a single movement of the total, which is what the D200X physically means.
  */
 
-import { AXIS, ACTION, ENCODER_ICONS, ENCODER_FLUSH_MS } from '../core/constants.js';
+import {
+  AXIS,
+  ACTION,
+  DEFAULT_ENCODER_STEP,
+  ENCODER_ICONS,
+  ENCODER_FLUSH_MS,
+  PAN_DIRECTION,
+} from '../core/constants.js';
 import { advanceAxis, axisFor, currentAxis, rotateSteps } from '../core/dial.js';
 import { driverPolarity, stepSize } from '../core/params.js';
 import { setEncoderAxis } from '../core/ui.js';
@@ -27,7 +34,24 @@ const FIXED_AXIS = Object.freeze({
 
 export const uuids = [ACTION.ENCODER, ACTION.PAN_ENCODER, ACTION.TILT_ENCODER, ACTION.ZOOM_ENCODER];
 
-export const defaults = { stepSize: 1 };
+/**
+ * Defaults per action, because the encoders do not all have the same settings.
+ *
+ * The pan direction belongs to the cycling encoder too: it moves pan whenever the knob is
+ * on that axis, and a knob that ignores a preference the pan keys honour is a knob that
+ * disagrees with them. It is offered on the cycling encoder's own panel for the same
+ * reason.
+ *
+ * @param {string} uuid
+ * @returns {object}
+ */
+export function defaultsFor(uuid) {
+  const defaults = { stepSize: DEFAULT_ENCODER_STEP };
+  if (uuid === ACTION.ENCODER || uuid === ACTION.PAN_ENCODER) {
+    defaults.panDirection = PAN_DIRECTION.NORMAL;
+  }
+  return defaults;
+}
 
 /** The axis this action drives on its own, or null when it cycles. */
 export function fixedAxisFor(uuid) {
@@ -59,7 +83,7 @@ export function onDialRotate(ctx, message) {
   if (direction === 0) return;
 
   const axis = axisFor(fixedAxisFor(ctx.uuid), ctx.entry);
-  const step = stepSize(ctx.settings.stepSize, defaults.stepSize);
+  const step = stepSize(ctx.settings.stepSize, DEFAULT_ENCODER_STEP);
   // The rotation becomes a driver value through the same helper the move buttons use, so
   // turning a dial right moves the head the way the matching key would - and the pan
   // direction the user chose applies to the pan dial exactly as it does to the pan keys.

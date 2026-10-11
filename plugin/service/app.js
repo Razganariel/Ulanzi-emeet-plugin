@@ -71,7 +71,11 @@ function contextFor(message) {
   const action = findByUuid(uuid);
   if (!action) return null;
 
-  const entry = ensureEntry(contexts, message.context, uuid);
+  // The defaults are seeded here, and only for an entry that does not exist yet. Doing it
+  // again on every add undid the user's settings: the host answers a panel before it
+  // announces the key, so anything chosen in the panel was already stored when the
+  // defaults landed on top of it.
+  const entry = ensureEntry(contexts, message.context, uuid, defaultsFor(uuid));
   return {
     $UD,
     action,
@@ -120,10 +124,8 @@ $UD.onConnected(() => {
 $UD.onAdd((message) => {
   const ctx = contextFor(message);
   if (!ctx) return;
-  // Seeded with the action's own defaults so a panel opened before the host answers shows
-  // the values the action really uses rather than empty fields. The host's `param`, when
-  // it comes, is merged over the top.
-  mergeSettings(ctx.entry, defaultsFor(ctx.uuid));
+  // Only the host's own copy of the settings. The action's defaults were seeded when the
+  // entry was created, and re-merging them here would overwrite whatever the user chose.
   mergeSettings(ctx.entry, message.param);
   log(`action added: ${message.context}`);
   ctx.action.render?.(ctx);

@@ -56,15 +56,26 @@ export function createStore() {
  * at a time, and each panel only carries the fields it owns. Rebuilding the object from
  * the defaults on each message is what made saving a preset list put the encoder's own
  * step back to its default.
+ *
+ * The defaults are applied **once, here**, on creation. They used to be merged again on
+ * every add, which silently undid the user's choices: the host sends `didReceiveSettings`
+ * before `add`, so the stored settings were already in the entry when the defaults landed
+ * on top of them. A pan direction chosen as "inverted" went back to "normal" every time
+ * the key was looked at again.
+ *
+ * @param {Map} store
+ * @param {string} context
+ * @param {string} uuid
+ * @param {object} [defaults]  the action's own defaults, applied only to a new entry
  */
-export function ensureEntry(store, context, uuid) {
+export function ensureEntry(store, context, uuid, defaults = {}) {
   const key = String(context ?? '');
   const found = store.get(key);
   if (found && (!uuid || found.uuid === uuid)) return found;
 
   const entry = {
     uuid: uuid || decodeContext(key).uuid.toLowerCase(),
-    settings: {},
+    settings: { ...defaults },
     axisIndex: 0,
     longPressTimer: null,
   };

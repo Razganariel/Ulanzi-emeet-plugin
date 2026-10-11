@@ -169,7 +169,7 @@ test('the pan direction is offered on the pan actions and nowhere else', () => {
   // The preference has to be reachable where it applies, and absent where it does not: a
   // select that changes nothing is worse than no select. Tilt and zoom conform to the
   // documented sign, so there is nothing there to choose.
-  const PAN_ACTIONS = [ACTION.PAN_LEFT, ACTION.PAN_RIGHT, ACTION.PAN_ENCODER];
+  const PAN_ACTIONS = [ACTION.PAN_LEFT, ACTION.PAN_RIGHT, ACTION.PAN_ENCODER, ACTION.ENCODER];
   const panelOf = (uuid) => manifest.Actions.find((action) => action.UUID === uuid).PropertyInspectorPath;
   const hasField = (uuid) => {
     const html = readFileSync(path.join(PLUGIN, panelOf(uuid)), 'utf8');

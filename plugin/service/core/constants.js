@@ -116,6 +116,9 @@ export const DEFAULT_ZOOM_STEP = 5;
 
 export const DEFAULT_STEP_SIZE = 1;
 
+/** Default step for an encoder, in UVC units. A dial moves in smaller notches than a key. */
+export const DEFAULT_ENCODER_STEP = 1;
+
 /**
  * Largest step a setting may ask for.
  *

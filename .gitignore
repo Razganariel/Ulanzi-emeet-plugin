@@ -1,0 +1,8 @@
+node_modules/
+sdk/
+release/
+*.log
+*.ulanziPlugin/
+
+# Compiled by scripts/build-native.mjs, not source.
+plugin/native/

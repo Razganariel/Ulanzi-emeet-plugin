@@ -1,0 +1,310 @@
+{
+  "Author": "PIXY PTZ",
+  "Name": "PIXY PTZ",
+  "Description": "Controle PTZ de la caméra EMEET PIXY 4K via UVC (sans EMEET Studio)",
+  "Icon": "images/EMEETPIXYDual.png",
+  "Version": "0.1.0",
+  "Category": "PIXY",
+  "CategoryIcon": "images/EMEETPIXYDual.png",
+  "CodePath": "service/app.js",
+  "Type": "JavaScript",
+  "Inspect": "--inspect=127.0.0.1:9214",
+  "PrivateAPI": true,
+  "UUID": "com.ulanzi.ulanzideck.pixy",
+  "Actions": [
+    {
+      "Name": "Pan Left",
+      "Icon": "images/gradient-arrow-left.png",
+      "PropertyInspectorPath": "property-inspector/pixyMove/inspector.html",
+      "UUID": "com.ulanzi.ulanzideck.pixy.panleft",
+      "Tooltip": "Faire pivoter la caméra vers la gauche",
+      "state": 0,
+      "States": [
+        { "Name": "idle", "Image": "images/gradient-arrow-left.png" }
+      ],
+      "SupportedInMultiActions": false,
+      "Controllers": ["Keypad"],
+      "Devices": ["D200X"]
+    },
+    {
+      "Name": "Pan Right",
+      "Icon": "images/gradient-arrow-right.png",
+      "PropertyInspectorPath": "property-inspector/pixyMove/inspector.html",
+      "UUID": "com.ulanzi.ulanzideck.pixy.panright",
+      "Tooltip": "Faire pivoter la caméra vers la droite",
+      "state": 0,
+      "States": [
+        { "Name": "idle", "Image": "images/gradient-arrow-right.png" }
+      ],
+      "SupportedInMultiActions": false,
+      "Controllers": ["Keypad"],
+      "Devices": ["D200X"]
+    },
+    {
+      "Name": "Tilt Up",
+      "Icon": "images/gradient-arrow-up.png",
+      "PropertyInspectorPath": "property-inspector/pixyMove/inspector.html",
+      "UUID": "com.ulanzi.ulanzideck.pixy.tiltup",
+      "Tooltip": "Incliner la caméra vers le haut",
+      "state": 0,
+      "States": [
+        { "Name": "idle", "Image": "images/gradient-arrow-up.png" }
+      ],
+      "SupportedInMultiActions": false,
+      "Controllers": ["Keypad"],
+      "Devices": ["D200X"]
+    },
+    {
+      "Name": "Tilt Down",
+      "Icon": "images/gradient-arrow-down.png",
+      "PropertyInspectorPath": "property-inspector/pixyMove/inspector.html",
+      "UUID": "com.ulanzi.ulanzideck.pixy.tiltdown",
+      "Tooltip": "Incliner la caméra vers le bas",
+      "state": 0,
+      "States": [
+        { "Name": "idle", "Image": "images/gradient-arrow-down.png" }
+      ],
+      "SupportedInMultiActions": false,
+      "Controllers": ["Keypad"],
+      "Devices": ["D200X"]
+    },
+    {
+      "Name": "Zoom In",
+      "Icon": "images/gradient-zoom-in.png",
+      "PropertyInspectorPath": "property-inspector/pixyMove/zoom.html",
+      "UUID": "com.ulanzi.ulanzideck.pixy.zoomin",
+      "Tooltip": "Zoom avant",
+      "state": 0,
+      "States": [
+        { "Name": "idle", "Image": "images/gradient-zoom-in.png" }
+      ],
+      "SupportedInMultiActions": false,
+      "Controllers": ["Keypad"],
+      "Devices": ["D200X"]
+    },
+    {
+      "Name": "Zoom Out",
+      "Icon": "images/gradient-zoom-out.png",
+      "PropertyInspectorPath": "property-inspector/pixyMove/zoom.html",
+      "UUID": "com.ulanzi.ulanzideck.pixy.zoomout",
+      "Tooltip": "Zoom arrière",
+      "state": 0,
+      "States": [
+        { "Name": "idle", "Image": "images/gradient-zoom-out.png" }
+      ],
+      "SupportedInMultiActions": false,
+      "Controllers": ["Keypad"],
+      "Devices": ["D200X"]
+    },
+    {
+      "Name": "Center",
+      "Icon": "images/gradient-accuracy.png",
+      "UUID": "com.ulanzi.ulanzideck.pixy.center",
+      "Tooltip": "Recentrer la caméra (valeurs par défaut)",
+      "state": 0,
+      "States": [
+        { "Name": "idle", "Image": "images/gradient-accuracy.png" }
+      ],
+      "SupportedInMultiActions": false,
+      "Controllers": ["Keypad"],
+      "Devices": ["D200X"]
+    },
+    {
+"Name": "PTZ Encoder",
+      "Icon": "images/gradient-ptz.png",
+      "PropertyInspectorPath": "property-inspector/pixyEncoder/inspector.html",
+      "UUID": "com.ulanzi.ulanzideck.pixy.encoder",
+      "Tooltip": "Encodeur PTZ : rotation = déplacement, appui = changement d'axe",
+      "state": 0,
+      "States": [
+        { "Name": "idle", "Image": "images/gradient-ptz.png" }
+      ],
+      "SupportedInMultiActions": false,
+      "Controllers": ["Encoder"],
+      "Devices": [],
+      "Encoder": {
+        "layout": "$UA1"
+      }
+    },
+    {
+      "Name": "Pan (Encodeur)",
+      "Icon": "images/gradient-arrow-horizontal.png",
+      "PropertyInspectorPath": "property-inspector/pixyEncoder/inspector.html",
+      "UUID": "com.ulanzi.ulanzideck.pixy.panencoder",
+      "Tooltip": "Molette Pan : rotation = pan, appui = recentrer",
+      "state": 0,
+      "States": [
+        { "Name": "idle", "Image": "images/gradient-arrow-horizontal.png" }
+      ],
+      "SupportedInMultiActions": false,
+      "Controllers": ["Encoder"],
+      "Devices": [],
+      "Encoder": {
+        "layout": "$UA1"
+      }
+    },
+    {
+      "Name": "Tilt (Encodeur)",
+      "Icon": "images/gradient-arrow-vertical.png",
+      "PropertyInspectorPath": "property-inspector/pixyEncoder/inspector.html",
+      "UUID": "com.ulanzi.ulanzideck.pixy.tiltencoder",
+      "Tooltip": "Molette Tilt : rotation = tilt, appui = recentrer",
+      "state": 0,
+      "States": [
+        { "Name": "idle", "Image": "images/gradient-arrow-vertical.png" }
+      ],
+      "SupportedInMultiActions": false,
+      "Controllers": ["Encoder"],
+      "Devices": [],
+      "Encoder": {
+        "layout": "$UA1"
+      }
+    },
+    {
+      "Name": "Zoom (Encodeur)",
+      "Icon": "images/gradient-arrow-enlarge.png",
+      "PropertyInspectorPath": "property-inspector/pixyEncoder/inspector.html",
+      "UUID": "com.ulanzi.ulanzideck.pixy.zoomencoder",
+      "Tooltip": "Molette Zoom : rotation = zoom, appui = recentrer",
+      "state": 0,
+      "States": [
+        { "Name": "idle", "Image": "images/gradient-arrow-enlarge.png" }
+      ],
+      "SupportedInMultiActions": false,
+      "Controllers": ["Encoder"],
+      "Devices": [],
+      "Encoder": {
+        "layout": "$UA1"
+      }
+    },
+    {
+      "Name": "Start",
+      "Icon": "images/preset-0.png",
+      "PropertyInspectorPath": "property-inspector/pixyPosition/inspector.html",
+      "UUID": "com.ulanzi.ulanzideck.pixy.start",
+      "Tooltip": "Appui court : rappeler la position de démarrage. Appui long : enregistrer la position courante comme position de démarrage",
+      "state": 0,
+      "States": [
+        { "Name": "idle", "Image": "images/preset-0.png" }
+      ],
+      "SupportedInMultiActions": false,
+      "Controllers": ["Keypad"],
+      "Devices": ["D200X"]
+    },
+    {
+      "Name": "Preset 1",
+      "Icon": "images/preset-1.png",
+      "PropertyInspectorPath": "property-inspector/pixyPosition/inspector.html",
+      "UUID": "com.ulanzi.ulanzideck.pixy.preset1",
+      "Tooltip": "Appui court : rappeler la position enregistrée 1. Appui long : enregistrer la position courante dans le preset 1",
+      "state": 0,
+      "States": [
+        { "Name": "idle", "Image": "images/preset-1.png" }
+      ],
+      "SupportedInMultiActions": false,
+      "Controllers": ["Keypad"],
+      "Devices": ["D200X"]
+    },
+    {
+      "Name": "Preset 2",
+      "Icon": "images/preset-2.png",
+      "PropertyInspectorPath": "property-inspector/pixyPosition/inspector.html",
+      "UUID": "com.ulanzi.ulanzideck.pixy.preset2",
+      "Tooltip": "Appui court : rappeler la position enregistrée 2. Appui long : enregistrer la position courante dans le preset 2",
+      "state": 0,
+      "States": [
+        { "Name": "idle", "Image": "images/preset-2.png" }
+      ],
+      "SupportedInMultiActions": false,
+      "Controllers": ["Keypad"],
+      "Devices": ["D200X"]
+    },
+    {
+      "Name": "Preset 3",
+      "Icon": "images/preset-3.png",
+      "PropertyInspectorPath": "property-inspector/pixyPosition/inspector.html",
+      "UUID": "com.ulanzi.ulanzideck.pixy.preset3",
+      "Tooltip": "Appui court : rappeler la position enregistrée 3. Appui long : enregistrer la position courante dans le preset 3",
+      "state": 0,
+      "States": [
+        { "Name": "idle", "Image": "images/preset-3.png" }
+      ],
+      "SupportedInMultiActions": false,
+      "Controllers": ["Keypad"],
+      "Devices": ["D200X"]
+    },
+    {
+      "Name": "Preset 4",
+      "Icon": "images/preset-4.png",
+      "PropertyInspectorPath": "property-inspector/pixyPosition/inspector.html",
+      "UUID": "com.ulanzi.ulanzideck.pixy.preset4",
+      "Tooltip": "Appui court : rappeler la position enregistrée 4. Appui long : enregistrer la position courante dans le preset 4",
+      "state": 0,
+      "States": [
+        { "Name": "idle", "Image": "images/preset-4.png" }
+      ],
+      "SupportedInMultiActions": false,
+      "Controllers": ["Keypad"],
+      "Devices": ["D200X"]
+    },
+    {
+      "Name": "Preset 5",
+      "Icon": "images/preset-5.png",
+      "PropertyInspectorPath": "property-inspector/pixyPosition/inspector.html",
+      "UUID": "com.ulanzi.ulanzideck.pixy.preset5",
+      "Tooltip": "Appui court : rappeler la position enregistrée 5. Appui long : enregistrer la position courante dans le preset 5",
+      "state": 0,
+      "States": [
+        { "Name": "idle", "Image": "images/preset-5.png" }
+      ],
+      "SupportedInMultiActions": false,
+      "Controllers": ["Keypad"],
+      "Devices": ["D200X"]
+    },
+    {
+      "Name": "Mode Standard",
+      "Icon": "images/gradient-move.png",
+      "UUID": "com.ulanzi.ulanzideck.pixy.modestandard",
+      "Tooltip": "Mode manuel/standard (HID canal propriétaire)",
+      "state": 0,
+      "States": [
+        { "Name": "idle", "Image": "images/gradient-move.png" }
+      ],
+      "SupportedInMultiActions": false,
+      "Controllers": ["Keypad"],
+      "Devices": ["D200X"]
+    },
+    {
+      "Name": "Mode Tracking",
+      "Icon": "images/gradient-aperture.png",
+      "UUID": "com.ulanzi.ulanzideck.pixy.modetracking",
+      "Tooltip": "Mode suivi (auto-follow, HID canal propriétaire)",
+      "state": 0,
+      "States": [
+        { "Name": "idle", "Image": "images/gradient-aperture.png" }
+      ],
+      "SupportedInMultiActions": false,
+      "Controllers": ["Keypad"],
+      "Devices": ["D200X"]
+    },
+    {
+      "Name": "Mode Privacy",
+      "Icon": "images/gradient-privacy.png",
+      "UUID": "com.ulanzi.ulanzideck.pixy.modeprivacy",
+      "Tooltip": "Mode confidentiel (privacy, HID canal propriétaire)",
+      "state": 0,
+      "States": [
+        { "Name": "idle", "Image": "images/gradient-privacy.png" }
+      ],
+      "SupportedInMultiActions": false,
+      "Controllers": ["Keypad"],
+      "Devices": ["D200X"]
+    }
+  ],
+  "OS": [
+    { "Platform": "windows", "MinimumVersion": "10" }
+  ],
+  "Software": {
+    "MinVersion": "3.3.0"
+  }
+}

@@ -131,7 +131,8 @@ Restart Ulanzi Studio.
 | `npm run sdk` | Fetches the two official Ulanzi SDK repos into `sdk/` |
 | `npm run native` | Compiles `PixyController.exe` and `PixyHidProbe.exe` into `plugin/native/` |
 | `npm run build` | Assembles `release/<uuid>.ulanziPlugin/` and checks it |
-| `npm test` | 73 tests, no camera, no deck, no helper binary |
+| `npm test` | 104 tests, no camera, no deck, no helper binary |
+| `npm run mock` | A stand-in Ulanzi Studio on port 3906, to drive the plugin without a deck |
 | `npm run release` | All three, then the tests |
 
 `npm run build` refuses to produce a bundle that would not start: it validates the UUIDs,
@@ -148,9 +149,25 @@ To point the service at a different helper, for a debug run:
 $env:PIXY_CONTROLLER_PATH = 'D:\chemin\vers\PixyController.exe'
 ```
 
+### Driving the plugin without a deck
+
+`npm run mock` starts a stand-in Ulanzi Studio and waits:
+
+```
+mock> key panright
+mock> dial panencoder left
+mock> place zoomout
+mock> frames
+```
+
+It has no dependency of its own: it speaks RFC 6455 over `node:net`, because the only
+WebSocket package in this project is `ws`, and that is a runtime dependency of the built
+plugin rather than something a dev tool should reach into. It announces actions, presses
+keys, turns dials, and prints what the plugin sent back — it is not a second Ulanzi Studio.
+
 ## 7. Tests
 
-`npm test` runs 73 tests. None of them touch hardware:
+`npm test` runs 104 tests. None of them touch hardware:
 
 - `bridge.test.js` — the line protocol against a fake process: pairing, serialisation,
   partial reads, deadlines, a dead helper, a missing one, quit-then-kill.
@@ -158,6 +175,14 @@ $env:PIXY_CONTROLLER_PATH = 'D:\chemin\vers\PixyController.exe'
 - `app.test.js` — the service driven through the real SDK with frames arriving on a fake
   socket, which is how the host drives it.
 - `params.test.js`, `dial.test.js` — the parsing and the axis rules.
+- `wiring.test.js` — the mistakes syntax checking cannot see: a call whose name was never
+  imported, an action hook misspelled behind optional chaining, a second place spawning the
+  camera helper.
+- `manifest.test.js` — the deck's own view: icons and inspector paths exist, the uuids are
+  well formed, and an encoder action does not claim a device (which would stop it being
+  droppable on a dial — that regression happened, see PROJECT_CONTEXT.md §37).
+- `mock-studio.test.js` — the stand-in Studio over a real socket, against Node's built-in
+  WebSocket client. Both are exercised so neither can be right in the same wrong way.
 
 ## 8. Hardware verification
 

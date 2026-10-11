@@ -1756,3 +1756,93 @@ pm run build produit un bundle complet ; 15 modules de service et 1 module
   la reconstruction du bridge.
 - LIKELY : manifest.json gagnerait à passer images/ en SVG comme les deux autres
   plugins ; non fait, hors périmètre.
+---
+
+# 48 - Audit P1 : garde-fous non physiques (2026-10-11)
+
+Terminé, P1 exécuté en entier. Aucun matériel requis. Suite : **104 tests** (73 + 31).
+
+## 1. 	ests/wiring.test.js - 7 cas
+
+Analyse statique du service. 
+ode --check ne fait que parser : un nom utilisé jamais
+importé parse parfaitement et lève un ReferenceError au premier appel, qui atterrit dans
+le uncaughtException - qui journalise et continue. Le plugin marche, la ligne cassée est
+une ligne de log que personne ne lit.
+
+Cette famille d'erreur s'est produite **deux fois pendant le découpage du §47** : un objet
+ridge inventé au point d'appel pour satisfaire une signature, et un champ lu ctx.action
+alors que le constructeur l'appelait autrement. Les deux parsent.
+
+Périmètre volontairement étroit : uniquement les appels **en colonne 0**, c'est-à-dire le
+câblage de niveau module. C'est la méthode du projet frère, qui a subi exactement ce bug
+(installShutdownHandlers(registry) sans import correspondant). Vérifier les appels dans
+les corps de fonction produirait trop de faux positifs pour un gain nul ici.
+
+Vérifié par mutation : supprimer l'import de installShutdownHandlers -> échec cité ;
+renommer ender en endar -> échec cité. **Un test qui ne peut pas échouer ne vaut rien.**
+
+## 2. 	ests/manifest.test.js - 13 cas
+
+Contrôles que le build fait déjà sur la sortie, mais faits sur les sources, donc attrapés
+par 
+pm test et non en regardant le deck.
+
+Le cas important est un **garde-fou de régression** : une action encodeur qui déclare
+Devices: ["D200X"] **ne peut pas être déposée sur une molette**. C'est arrivé (§37), et
+c'était invisible parce que le manifest est du JSON valide dans les deux cas.
+
+Vérifié par mutation : réintroduire Devices: ["D200X"] sur l'action PTZ Encoder ->
+échec cité.
+
+## 3. scripts/mock-studio.mjs - remplacement des harnais perdus
+
+Les quatre harnais mockStudio*.cjs qui avaient produit les CONFIRMED des §32, §38, §39 et
+§43 n'existaient plus : **0 dans le dépôt, 0 dans le répertoire temporaire**. Toute cette
+validation E2E avait disparu avec l'ancienne arborescence.
+
+Remplacement, avec deux différences assumées :
+
+- **Sans dépendance.** Il parle RFC 6455 sur 
+ode:net + 
+ode:crypto. Le seul paquet
+  WebSocket du projet est ws, et c'est une dépendance d'exécution du plugin construit :
+  un outil de développement ne doit pas y aller chercher. Les trames concernées sont de
+  petits objets JSON texte, non fragmentés et non compressés - tout ce que le SDK envoie.
+- **Il est testé.** 	ests/mock-studio.test.js (11 cas) le pilote avec le WebSocket natif
+  de Node, donc une erreur de cadrage échoue à la suite au lieu d'échouer une session.
+
+CONFIRMED : handshake accepté par le client natif de Node ; trame fractionnée réassemblée ;
+trame masquée démasquée ; charge utile > 125 octets (champ de longueur étendu) ; trame non
+JSON enregistrée comme telle et non comme un événement ; une requête HTTP non-upgrade
+rejetée en 400.
+
+Limite assumée : le client natif de Node n'est pas le paquet ws que le SDK utilise. Un
+client conforme au RFC mais différent pourrait passer. Ce que le test garantit, c'est que le
+cadrage est réel et que les deux implémentations s'accordent.
+
+## 4. .csproj du diagnostic supprimé
+
+Il déclarait 
+et8.0-windows + ImplicitUsings + Nullable alors que la seule
+compilation documentée est csc.exe .NET Framework, et que **le SDK .NET 8 n'est pas
+installé** sur cette machine (§27). Un projet qui promet un dotnet build impossible est
+pire que pas de projet. CONFIRMED : le code compile toujours avec la commande du README
+(csc, code de sortie 0).
+
+## 5. Branche efacto supprimée
+
+Constatée au moment de commiter : HEAD était passé sur efacto, branche figée à
+248223f - **avant** le commit du README. Tout le travail P1 se retrouvait non commité
+par-dessus l'ancienne branche. efacto étant un ancêtre strict de develop, le
+changement de branche a reporté les modifications sans perte, et la branche a été
+supprimée (git branch -d).
+
+## Statuts
+
+- CONFIRMED : 104 tests passent, 
+pm run build produit un bundle complet (15 modules de
+  service, 1 module d'inspector parsés).
+- CONFIRMED : 
+pm run mock démarre et affiche son invite.
+- UNVERIFIED : inchangé - tout ce qui demande la caméra ou le D200X. Voir §47.

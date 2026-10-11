@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   four encoder actions (a mode-cycling encoder plus one encoder bound to pan, to tilt
   or to zoom), a start position and five presets (short press recalls, long press
   stores), and the three camera modes (standard, tracking, privacy).
-- 73 tests over `npm test`, none of which need a camera, a deck or the helper binary.
+- 104 tests over `npm test`, none of which need a camera, a deck or the helper binary.
 
 ### Fixed
 
@@ -65,6 +65,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+- `wiring.test.js` and `manifest.test.js`: the mistakes syntax checking cannot see - a
+  call whose name was never imported, an action hook misspelled behind optional chaining, an
+  icon path that does not exist, and an encoder action that claims a device, which stops it
+  being droppable on a dial (that regression happened, PROJECT_CONTEXT.md section 37). Both
+  files were verified by mutation: each one still fails on the bug it was written for.
+- `npm run mock`: a stand-in Ulanzi Studio, so the plugin can be driven without a deck.
+  It has no dependency of its own - it speaks RFC 6455 over `node:net`, because the only
+  WebSocket package here is `ws` and that is a runtime dependency of the built plugin. It
+  replaces the four `mockStudio*.cjs` harnesses that were lost with the old layout, and it
+  is itself tested against Node's built-in WebSocket client.
+
+### Removed
+- `native/PixyCameraControlDiagnostic/PixyCameraControlDiagnostic.csproj`. It declared
+  `net8.0-windows` while the only documented build is the .NET Framework compiler that
+  ships with Windows, and the .NET 8 SDK is not installed on the build machine. A project
+  file that promises an impossible `dotnet build` is worse than none.
+- The stale local branch `refacto`, which had been left at the commit before the README.
 - `property-inspector/*/inspector.js`, superseded by `property-inspector/shared.js`.
 
 ### Repository

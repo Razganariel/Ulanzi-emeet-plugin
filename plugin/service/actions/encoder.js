@@ -13,7 +13,7 @@
  * flick into a single movement of the total, which is what the D200X physically means.
  */
 
-import { AXIS, ACTION, ENCODER_ICONS, ENCODER_FLUSH_MS } from '../core/constants.js';
+import { AXIS, ACTION, AXIS_POLARITY, ENCODER_ICONS, ENCODER_FLUSH_MS } from '../core/constants.js';
 import { advanceAxis, axisFor, currentAxis, rotateSteps } from '../core/dial.js';
 import { stepSize } from '../core/params.js';
 import { setEncoderAxis } from '../core/ui.js';
@@ -60,6 +60,9 @@ export function onDialRotate(ctx, message) {
 
   const axis = axisFor(fixedAxisFor(ctx.uuid), ctx.entry);
   const step = stepSize(ctx.settings.stepSize, defaults.stepSize);
+  // The rotation is converted to the driver's sign by the same polarity the move buttons
+  // use, so turning a dial right moves the head the way the matching key would.
+  const delta = direction * AXIS_POLARITY[axis] * step;
 
   let slots = pending.get(ctx.entry);
   if (!slots) {
@@ -67,7 +70,7 @@ export function onDialRotate(ctx, message) {
     pending.set(ctx.entry, slots);
   }
   const slot = slots.get(axis) || { delta: 0, ctx };
-  slot.delta += direction * step;
+  slot.delta += delta;
   slots.set(axis, slot);
 
   if (!flushTimer) {

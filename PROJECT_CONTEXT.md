@@ -1846,3 +1846,67 @@ pm run build produit un bundle complet (15 modules de
 - CONFIRMED : 
 pm run mock démarre et affiche son invite.
 - UNVERIFIED : inchangé - tout ce qui demande la caméra ou le D200X. Voir §47.
+---
+
+# 49 - Sens reel des axes, mesure sur la camera (2026-10-11)
+
+Ferme le point le plus ancien du projet, ouvert depuis le §22 et repris dans le §27, le §29
+et le README de pixy-controller : **le signe effectif de chaque axe n'avait jamais ete
+etabli**. Les tests d'ecriture du §28 et §29 utilisaient des deplacements d'un seul pas
+(0 -> 1 -> 0) que l'utilisateur n'a pas percus ; les lectures Get prouvaient que le
+pilote acceptait la valeur, pas que la tete bougeait dans le bon sens.
+
+## Resultat du test utilisateur
+
+| Action | Rotation / appui | Resultat |
+| --- | --- | --- |
+| Boutons Pan Gauche / Pan Droit | — | **KO, inverse** |
+| Boutons Tilt Haut / Tilt Bas | — | OK |
+| Boutons Zoom + / Zoom - | — | OK |
+| Encodeur Zoom | gauche = zoom -, droite = zoom + | OK |
+| Encodeur Pan | gauche = move droite, droite = move gauche | **KO, inverse** |
+| Encodeur Tilt | gauche = move bas, droite = move haut | OK |
+| Encodeur PTZ (cyclique) | identique aux encodeurs separes | pan a inverser |
+| Center, presets, modes standard / tracking / privacy | — | OK |
+
+## Lecture du resultat
+
+Les quatre manifestations du pan sont **un seul et meme defaut**, pas quatre :
+
+- bouton Pan Gauche envoyait pan -step et allait a droite ;
+- encodeur pan rotation gauche envoyait pan -step et allait a droite.
+
+Donc sur cette PIXY : pan +step deplace la tete vers la **gauche**, alors que
+	ilt +step la monte et que zoom +step la resserre. Les trois axes n'ont pas la meme
+convention de signe.
+
+## Correction
+
+AXIS_POLARITY dans core/constants.js : pan: -1, 	ilt: 1, zoom: 1. Appliquee par
+les deux seuls endroits qui pilotent un axe - ctions/move.js et ctions/encoder.js -
+qui gardent des directions physiques (gauche, droite, haut, bas, avant, arriere).
+
+## Le piege que cela revele
+
+Deux emplacements portent la meme conversion. Corriger un seul produit des touches qui
+contredisent les molettes, ce qui ne se voit qu'en utilisant les deux. Le test
+** key and its encoder move the head the same way** (	ests/actions.test.js) verifie
+l'invariant pour les six paires bouton / encodeur.
+
+Verifie par mutation : appliquer la polarite au bouton et l'oublier sur l'encodeur fait
+echouer ce test (4 echecs), en citant
+panleft moves like panencoder rotated left.
+
+## Ce que ce test n'a pas corrige
+
+Aucun autre defaut signale. Restent ouverts : §48 UNVERIFIED (delai du bridge,
+reconstruction), §43 (Zoom In a stepSize=20 non concluant, camera au maximum), §29
+(cohabitation OBS + plugin, jamais faite avec le plugin reellement installe), et les items
+P3 de l'audit (debranchement, modes en ecriture seule, saut de camera au demarrage).
+
+## Statuts
+
+- CONFIRMED : polarite mesuree sur la camera pour les trois axes, boutons et encodeurs.
+- CONFIRMED : 105 tests passent ; le build produit un bundle complet.
+- UNVERIFIED : le resultat n'a pas ete revérifié apres correction - la correction ellememe
+  n'est verifiee que par test. A confirmer au prochain essai sur la PIXY.

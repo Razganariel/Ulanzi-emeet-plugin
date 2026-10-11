@@ -63,7 +63,9 @@ test('a press on a move key asks the camera for one movement', async () => {
   host('keydown', { key: '1_1', actionid: 'a1' });
   await settle();
 
-  assert.deepEqual(bridge.last('move'), { cmd: 'move', axis: 'pan', delta: -10 });
+  // Pan Left is +10 on this camera: a positive pan moves the head left. Measured, see
+  // PROJECT_CONTEXT.md section 49.
+  assert.deepEqual(bridge.last('move'), { cmd: 'move', axis: 'pan', delta: 10 });
 });
 
 test('a step set in the panel is the step that is used', async () => {
@@ -72,7 +74,7 @@ test('a step set in the panel is the step that is used', async () => {
   host('keydown', { key: '1_2', actionid: 'a2' });
   await settle();
 
-  assert.equal(bridge.last('move').delta, -45);
+  assert.equal(bridge.last('move').delta, 45);
 });
 
 test('a panel that saves one field does not wipe the others', async () => {
@@ -84,7 +86,7 @@ test('a panel that saves one field does not wipe the others', async () => {
   host('keydown', { key: '1_3', actionid: 'a3' });
   await settle();
 
-  assert.equal(bridge.last('move').delta, -20, 'the step survived the message about another field');
+  assert.equal(bridge.last('move').delta, 20, 'the step survived the message about another field');
 });
 
 test('a key pressed before it was ever added still works', async () => {
@@ -149,7 +151,7 @@ test('a dial rotation is coalesced into one movement', async () => {
 
   const moves = bridge.requests.slice(before).filter((request) => request.cmd === 'move');
   assert.equal(moves.length, 1, 'three notches, one command');
-  assert.equal(moves[0].delta, 15);
+  assert.equal(moves[0].delta, -15);
 });
 
 test('a dial press on a fixed encoder recentres', async () => {
@@ -206,7 +208,7 @@ test('a camera that is not there does not take the deck down', async () => {
   setBridge(bridge);
   host('keydown', { key: '1_1', actionid: 'a1' });
   await settle();
-  assert.deepEqual(bridge.last('move'), { cmd: 'move', axis: 'pan', delta: -10 });
+  assert.deepEqual(bridge.last('move'), { cmd: 'move', axis: 'pan', delta: 10 });
 });
 
 test('a frame that is not JSON does not take the service down', async () => {
@@ -218,7 +220,7 @@ test('a frame that is not JSON does not take the service down', async () => {
   host('didReceiveSettings', { key: '1_1', actionid: 'a1', settings: { stepSize: '7' } });
   host('keydown', { key: '1_1', actionid: 'a1' });
   await settle();
-  assert.equal(bridge.last('move').delta, -7, 'the service carried on');
+  assert.equal(bridge.last('move').delta, 7, 'the service carried on');
 });
 
 test('a frame with no fields at all is survivable', async () => {

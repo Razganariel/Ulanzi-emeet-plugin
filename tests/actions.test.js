@@ -60,9 +60,13 @@ test('every action in the manifest is registered', async () => {
 });
 
 test('pan and tilt move one step in the right direction', async () => {
+  // The expected values are the driver's, not the physical ones. On this camera a positive
+  // pan moves the head LEFT while a positive tilt moves it UP - measured, see
+  // PROJECT_CONTEXT.md section 49 - so the two rows below are not negatives of each other
+  // by accident, they are the axis polarity doing its job.
   const cases = [
-    [ACTION.PAN_LEFT, AXIS.PAN, -10],
-    [ACTION.PAN_RIGHT, AXIS.PAN, 10],
+    [ACTION.PAN_LEFT, AXIS.PAN, 10],
+    [ACTION.PAN_RIGHT, AXIS.PAN, -10],
     [ACTION.TILT_UP, AXIS.TILT, 10],
     [ACTION.TILT_DOWN, AXIS.TILT, -10],
   ];
@@ -71,6 +75,40 @@ test('pan and tilt move one step in the right direction', async () => {
     const { ctx, bridge } = ctxFor(uuid);
     await findByUuid(uuid).onRun(ctx);
     assert.deepEqual(bridge.last('move'), { cmd: 'move', axis, delta }, `${uuid}`);
+  }
+});
+
+test('a key and its encoder move the head the same way', async () => {
+  // The invariant that the pan reversal was missing: the buttons and the encoders drive the
+  // same axes, and there are two places that could each carry the polarity. Fixing one and
+  // forgetting the other produces keys that disagree with dials, which is invisible until
+  // both are used.
+  // [button, rotation that must produce the same movement]
+  const pairs = [
+    [ACTION.PAN_LEFT, ACTION.PAN_ENCODER, 'left'],
+    [ACTION.PAN_RIGHT, ACTION.PAN_ENCODER, 'right'],
+    [ACTION.TILT_DOWN, ACTION.TILT_ENCODER, 'left'],
+    [ACTION.TILT_UP, ACTION.TILT_ENCODER, 'right'],
+    [ACTION.ZOOM_OUT, ACTION.ZOOM_ENCODER, 'left'],
+    [ACTION.ZOOM_IN, ACTION.ZOOM_ENCODER, 'right'],
+  ];
+
+  for (const [buttonUuid, encoderUuid, direction] of pairs) {
+    const key = ctxFor(buttonUuid, { stepSize: 5 });
+    await findByUuid(buttonUuid).onRun(key.ctx);
+
+    const dial = ctxFor(encoderUuid, { stepSize: 5 });
+    encoder.onDialRotate(dial.ctx, { rotateEvent: direction });
+    await settle();
+
+    const fromKey = key.bridge.last('move');
+    const fromDial = dial.bridge.last('move');
+    assert.equal(fromKey.axis, fromDial.axis, `${buttonUuid} and ${encoderUuid} share an axis`);
+    assert.equal(
+      fromDial.delta,
+      fromKey.delta,
+      `${buttonUuid} moves like ${encoderUuid} rotated ${direction}`
+    );
   }
 });
 
@@ -83,13 +121,13 @@ test('zoom defaults to half the step of the other axes', async () => {
 
   const pan = ctxFor(ACTION.PAN_RIGHT);
   await findByUuid(ACTION.PAN_RIGHT).onRun(pan.ctx);
-  assert.equal(pan.bridge.last('move').delta, 10);
+  assert.equal(pan.bridge.last('move').delta, -10, 'pan moves right with a negative driver value');
 });
 
 test("a key's own step overrides the default", async () => {
   const { ctx, bridge } = ctxFor(ACTION.PAN_RIGHT, { stepSize: 45 });
   await findByUuid(ACTION.PAN_RIGHT).onRun(ctx);
-  assert.equal(bridge.last('move').delta, 45, 'a step of 45 was driven on this camera');
+  assert.equal(bridge.last('move').delta, -45, 'a step of 45 was driven on this camera, and Pan Right is negative');
 });
 
 test('center asks the head for its own defaults', async () => {
@@ -175,7 +213,7 @@ test('a burst of notches is one movement of the total', async () => {
   await settle();
 
   assert.equal(bridge.commands().length, 1, 'four notches, one command');
-  assert.deepEqual(bridge.last('move'), { cmd: 'move', axis: AXIS.PAN, delta: 20 });
+  assert.deepEqual(bridge.last('move'), { cmd: 'move', axis: AXIS.PAN, delta: -20 });
 });
 
 test('a burst that turns both ways is the sum of the two', async () => {
@@ -238,7 +276,7 @@ test('notches turned before an axis change are not applied to the new one', asyn
   assert.equal(moves.length, 2, 'one movement per axis, not one combined');
   assert.deepEqual(
     moves.map((move) => [move.axis, move.delta]).sort(),
-    [[AXIS.PAN, 5], [AXIS.TILT, 5]].sort()
+    [[AXIS.PAN, -5], [AXIS.TILT, 5]].sort()
   );
 });
 

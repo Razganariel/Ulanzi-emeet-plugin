@@ -17,6 +17,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Pan was reversed, on both the buttons and the encoders.** Measured on the camera on
+  2026-10-11: `Pan Left` and `Pan Right` moved the head the wrong way, and so did the pan
+  encoder and the cycling PTZ encoder, while tilt and zoom were correct. The four symptoms
+  were one defect — on this PIXY a positive pan moves the head **left**, while a positive
+  tilt moves it up and a positive zoom moves it in. `AXIS_POLARITY` now carries that once,
+  in `core/constants.js`, and the two places that drive an axis both obey it.
+
+  This closes the oldest open question in the project: the effective sign of each axis had
+  never been established, because every write test until then used a single step the user
+  could not see. The reads proved the driver accepted the value, not that the head moved
+  the right way.
+
+  A test now asserts that a key and its encoder move the head the same way, for all six
+  button/dial pairs — two places carry the conversion, and correcting only one produces
+  keys that contradict dials. Verified by mutation.
 - **A command the camera never answered no longer wedges the deck for the session.**
   The bridge had no deadline: a driver that stopped answering produced silence rather than
   an error, the single in-flight slot never freed, and every later command was silently

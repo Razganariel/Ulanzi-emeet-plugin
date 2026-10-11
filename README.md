@@ -122,7 +122,10 @@ directory, keeping the folder name:
 - Windows: `%AppData%\Ulanzi\UlanziDeck\Plugins`
 - macOS: `~/Library/Application Support/Ulanzi/UlanziDeck/Plugins`
 
-Restart Ulanzi Studio.
+**Close Ulanzi Studio first.** A running plugin holds `native/PixyController.exe` open for
+the whole session — the helper is started on the first action and kept until Studio exits —
+so a copy over the top fails on that one file and leaves a half-updated plugin folder. If
+that happens, close Studio and copy again; nothing else is locked.
 
 ## 6. Development
 

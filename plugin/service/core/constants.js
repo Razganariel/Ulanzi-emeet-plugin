@@ -14,6 +14,24 @@ export const AXIS = Object.freeze({
 
 export const AXES = Object.freeze([AXIS.PAN, AXIS.TILT, AXIS.ZOOM]);
 
+/**
+ * Which way each axis counts in the driver's units.
+ *
+ * The three axes are not consistent with each other. A positive tilt moves the head up and
+ * a positive zoom moves it in, but a positive pan moves the head to its **left**. Every
+ * place that drives an axis multiplies by this, so a key that moves right and its encoder
+ * rotated right move the same way - which is not something that can be relied on by
+ * accident, and is asserted by the test that pairs each button with its encoder.
+ *
+ * Measured on the camera on 2026-10-11: pan was reversed against both the buttons and the
+ * encoders, tilt and zoom were correct. See PROJECT_CONTEXT.md section 49.
+ */
+export const AXIS_POLARITY = Object.freeze({
+  [AXIS.PAN]: -1,
+  [AXIS.TILT]: 1,
+  [AXIS.ZOOM]: 1,
+});
+
 export const ACTION = Object.freeze({
   PAN_LEFT: `${PLUGIN_UUID}.panleft`,
   PAN_RIGHT: `${PLUGIN_UUID}.panright`,

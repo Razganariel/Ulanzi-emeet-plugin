@@ -2237,11 +2237,7 @@ Recouvrement des UNVERIFIED des §47, §49 et §53.
   confirmes comme *fonctionnels* (§54), mais l'affichage du knob lui-meme, $UA1 +
   setFeedback, reste au statut LIKELY du §36 et du §44 : le protocole est verifie,
   le rendu sur l'appareil ne l'a jamais ete.
-- UNVERIFIED : core/ui.js et core/shutdown.js sont les deux modules sans test
-  comportemental propre. ui.js est exerce indirectement par le retour d'encodeur de
-  pp.test.js, mais rien ne verifie que le layout n'est applique qu'une fois par cle,
-  ni que les appels de dessin survivent a un hote trop ancien. shutdown.js est
-  enregistre a l'import de pp.js sans qu'aucun test n'affirme qu'il arrete le bridge.
+
 - UNVERIFIED : cohabitation OBS + plugin en meme temps (le §29 a teste OBS + sonde, jamais
   OBS + plugin installe).
 - UNVERIFIED : debranchement de la camera en cours d'utilisation, et le delai de 4 s du
@@ -4490,3 +4486,85 @@ Recouvrement des UNVERIFIED des §47, §49 et §53.
   bridge avec sa reconstruction.
 - UNVERIFIED : saut de la camera a la position start au demarrage du bridge.
 - UNVERIFIED : Zoom In a stepSize=20 (§43, non concluant a l'epoque, camera au maximum).
+---
+
+# 55 - Couverture de core/ui.js et core/shutdown.js (2026-10-11)
+
+Dernier point du P2 de l'audit. Ces deux modules n'etaient pas modifies ; ils etaient
+**non testes**, et les deux etaient ecrits pour des qualites qui ne se voient pas a la
+lecture.
+
+## core/ui.js - 9 cas, 	ests/ui.test.js
+
+Trois choses a prouver, toutes invisibles dans le code :
+
+1. **Le layout n'est applique qu'une fois par touche.** Invoquer setFeedbackLayout
+   redemande a l'hote de reconstruire la cle, et tant que le feedback qui suit n'est pas
+   arrive, le knob n'a rien a afficher d'autre que le nom de l'etat. C'est le clignotement
+   decrit au §36.
+2. **Un hote qui refuse une commande ne casse pas le deck.** setFeedbackLayout et
+   setFeedback exigent UlanziStudio 3.3.0+. Sans garde-fou, l'exception levee dans le SDK
+   remonterait et tuerait le gestionnaire d'evenement qui venait d'appeler ca - c'est-a-dire
+   celui qui allait aussi bouger la camera. Un knob sur un hote ancien arreterait de
+   bouger au lieu de simplement arreter d'afficher une icone.
+3. **Les deux echecs ne se traitent pas pareil.** Un layout refuse n'a jamais atteint la
+   cle : il doit etre reessaye. Un layout accepte mais un setFeedback refuse ne doit pas
+   etre renvoye, puisque c'est lui qui provoquait le clignotement.
+
+## core/shutdown.js - 11 cas, 	ests/shutdown.test.js
+
+Quatre qualites :
+
+1. L'arret du helper sur exit et sur les signaux, sinon le plugin garde la camera.
+2. **elease qui echoue ne doit pas emporter la sortie avec elle** : il ecrit dans le
+   stdin du helper, et un pipe deja ferme leve. Une exception sortie d'un gestionnaire
+   exit est rapportee par Node comme un plantage sur le chemin de la sortie.
+3. L'ordre sur un signal : arreter le helper **puis** sortir. L'inverse tuerait l'ecriture
+   qui arrete le helper.
+4. uncaughtException et unhandledRejection journalisent et survivent, y compris quand la
+   valeur levee n'a pas de .message.
+
+Le module est du cablage sur process. Les tests remplacent process.on et
+process.exit par des enregistreurs.
+
+## Deux pieges rencontres dans les tests eux-memes
+
+Les deux meritaient d'etre notes, parce que les deux produisent un **faux signal vert** :
+
+1. **Restaurer process.exit avant de declencher le handler.** Le handler appelle
+   process.exit, donc le vrai etait appele et le run de tests se terminait sans aucune
+   sortie. Un fichier de tests qui ne produit rien ressemble a un fichier qui ne teste
+   rien. Les remplacements doivent rester actifs pendant le declenchement.
+2. **Verifier un ordre en mesurant les deux parties separement.** Le test affirmait
+   « le helper est arrete » et « la sortie est propre », mais pas « le helper est arrete
+   **avant** la sortie » : echanger les deux lignes le laissait passer. Les deux doivent
+   atterrir dans une seule liste ordonnee.
+
+Troisieme piege, cotemodule : layoutsApplied est un Set de module sans remise a zero
+globale. Un test qui oublie de l'oublier contamine le suivant - c'est arrive, et le premier
+resultat etait un echec sur un test correct.
+
+## Verification par mutation
+
+| Mutation | Echecs |
+| --- | --- |
+| ui.js layout renvoye a chaque repaint | 6 |
+| ui.js plus de garde-fou sur hote ancien | 6 |
+| ui.js aucun contenu envoye | 3 |
+| shutdown.js helper non arrete | 5 |
+| shutdown.js echec de elease casse la sortie | 3 |
+| shutdown.js exception non rapportee | 2 |
+| shutdown.js sortie avant l'arret du helper | 1 |
+
+## Statuts
+
+- CONFIRMED : 146 tests passent, les 15 modules du service sont touches par un test.
+- CONFIRMED : les 15 modules du service sont tous exerces par un test. Quatre d'entre eux -
+  `center.js`, `mode.js`, `move.js`, `position.js` - le sont a travers
+  `actions.test.js` et le registre, qui est leur voie d'acces prevue ; ils n'ont pas de
+  fichier de test propre, exactement comme chez le projet frere ou six actions partagent un
+  seul jeu de cas. Les onze autres ont un fichier qui les nomme.
+- UNVERIFIED : process.on('exit') ne peut pas faire de travail asynchrone, et sous Windows
+  Node n'emet pas SIGTERM a la fermeture d'une fenetre. Le chemin propre est donc
+  probablement Ctrl-C et non la fermeture de Studio. Non verifie, et hors perimetre ici :
+  aucun test ne peut etablir ce que fait l'hote a la fermeture.

@@ -29,6 +29,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   could not see. The reads proved the driver accepted the value, not that the head moved
   the right way.
 
+  `AXIS_POLARITY` is a workaround for the camera, not a preference: Windows documents
+  `CameraControl_Pan` as positive = clockwise seen from above, that is, to the **right**,
+  and this camera does the opposite. Its tilt conforms, so only pan is negated — as does its
+  reported pan range, -150..+150 where the spec requires -180..+180. Whether EMEET intended
+  it is not determinable from this machine. **If EMEET ever corrects the sign, the pan entry
+  in `AXIS_POLARITY` has to go.**
+
   A test now asserts that a key and its encoder move the head the same way, for all six
   button/dial pairs — two places carry the conversion, and correcting only one produces
   keys that contradict dials. Verified by mutation.

@@ -1910,3 +1910,66 @@ P3 de l'audit (debranchement, modes en ecriture seule, saut de camera au demarra
 - CONFIRMED : 105 tests passent ; le build produit un bundle complet.
 - UNVERIFIED : le resultat n'a pas ete revérifié apres correction - la correction ellememe
   n'est verifiee que par test. A confirmer au prochain essai sur la PIXY.
+---
+
+# 50 - Le pan de la PIXY contredit la convention documentee (2026-10-11)
+
+Question posee par l'utilisateur : l'inversion du pan trouvee au §49 est-elle volontaire de
+la part d'EMEET ? Verification dans la documentation plutot que supposition.
+
+## Ce que disent les specifications
+
+- **CameraControl_Pan** (Microsoft Learn, CameraControlProperty) : « Positive values are
+  clockwise from the origin (the camera rotates clockwise when **viewed from above**), and
+  negative values are counterclockwise ». Vu du dessus, un sens horaire est un mouvement
+  vers la **droite**. Pan positif = panoramique a droite.
+- **KSPROPERTY_CAMERACONTROL_PAN** : meme formulation, et impose une plage de
+  **-180 a +180** pour le peripherique.
+- **UVC 1.5**, CT_PAN_TILT_ABSOLUTE_CONTROL : meme convention, et pour le tilt « positive
+  values point the imaging plane up ».
+
+## Ce que fait la PIXY (mesure au §49)
+
+| Axe | Convention documentee | Mesure | Conforme |
+| --- | --- | --- | --- |
+| Pan | positif = droite | positif = **gauche** | **NON** |
+| Tilt | positif = haut | positif = haut | oui |
+| Zoom | distance en mm | sans direction | sans objet |
+
+Indice complementaire : le meme firmware annonce une plage de pan de **-150 a +150**, la ou
+la specification exige -180 a +180.
+
+## Lecture
+
+La PIXY **contredit** la convention documentee, sur le pan seul. Cela est coherent avec un
+firmware qui n'applique pas la spec a ce controle, pas avec une alternative deliberee et
+documentee : aucune documentation EMEET ne mentionne une convention de signe propre.
+
+L'intention d'EMEET **reste indeterminee** et ne peut pas etre etablie depuis cette machine.
+Statut : **UNVERIFIED**.
+
+Deduction possible, sans preuve : si EMEET Studio pilotait le pan par le meme chemin UVC
+sans negation, le panoramique serait inverse pour tous les possesseurs d'une PIXY. Le pan
+etant l'axe PTZ le plus utilise, l'une des deux hypotheses devrait tenir : EMEET Studio
+applique la meme correction, ou il passe par un autre canal (le HID proprietaire, ou l'on
+sait deja que voyagent les modes, §33 et §35). Aucune des deux n'est verifiee.
+
+## Consequence pour le plugin
+
+La correction reste juste dans tous les cas : le plugin doit epouser **le materiel**, pas la
+specification. Mais AXIS_POLARITY est un **contournement avec une condition de retrait** :
+
+> Si EMEET corrige un jour le signe dans une mise a jour de firmware, supprimer l'entree
+> pan de AXIS_POLARITY. Les boutons et l'encodeur de panoramique s'inverseront alors.
+
+Le commentaire de core/constants.js porte cette condition.
+
+## Statuts
+
+- CONFIRMED : la convention documentee pour le pan est « positif = droite », vue du dessus
+  (Microsoft Learn, CameraControlProperty et KSPROPERTY_CAMERACONTROL_PAN).
+- CONFIRMED : la PIXY fait l'inverse, et declare une plage -150..+150 la ou la spec exige
+  -180..+180 (§49 et §27).
+- UNVERIFIED : l'intention d'EMEET. Aucune source disponible depuis cette machine.
+- UNVERIFIED : le comportement d'EMEET Studio pour le pan. Le tester reAuditerait si EMEET
+  fait la meme negation, mais ne repondrait pas a la question d'intention.

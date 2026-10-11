@@ -17,14 +17,29 @@ export const AXES = Object.freeze([AXIS.PAN, AXIS.TILT, AXIS.ZOOM]);
 /**
  * Which way each axis counts in the driver's units.
  *
- * The three axes are not consistent with each other. A positive tilt moves the head up and
- * a positive zoom moves it in, but a positive pan moves the head to its **left**. Every
- * place that drives an axis multiplies by this, so a key that moves right and its encoder
- * rotated right move the same way - which is not something that can be relied on by
- * accident, and is asserted by the test that pairs each button with its encoder.
+ * This is a workaround for the camera, not a convention of ours, and it exists because the
+ * PIXY contradicts the documented one on pan alone.
  *
- * Measured on the camera on 2026-10-11: pan was reversed against both the buttons and the
- * encoders, tilt and zoom were correct. See PROJECT_CONTEXT.md section 49.
+ * Windows documents `CameraControl_Pan` as: "Positive values are clockwise from the origin
+ * (the camera rotates clockwise when viewed from above)", and UVC 1.5 says the same for
+ * `CT_PANTILT_ABSOLUTE_CONTROL` — positive pan is to the **right**, positive tilt points the
+ * imaging plane **up**. Measured on this camera on 2026-10-11:
+ *
+ *   pan   positive moves the head LEFT    - contradicts the spec
+ *   tilt  positive moves the head UP      - conforms
+ *   zoom  a distance in millimetres       - no direction to get wrong
+ *
+ * The same firmware reports a pan range of -150..+150 where the spec requires
+ * -180..+180, which is consistent with a firmware that does not follow the documented
+ * convention here rather than with a deliberate alternative to it. Whether EMEET intended
+ * it cannot be determined from this machine, and it does not change what the plugin has to
+ * do: match the hardware, not the spec.
+ *
+ * **If EMEET ever corrects the sign in a firmware update, delete the pan entry here.** The
+ * pan buttons and the pan encoder will then move the wrong way again, which is the whole
+ * of this table. Tilt and zoom are conformant and must stay at 1.
+ *
+ * See PROJECT_CONTEXT.md section 49.
  */
 export const AXIS_POLARITY = Object.freeze({
   [AXIS.PAN]: -1,

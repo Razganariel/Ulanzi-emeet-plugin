@@ -158,7 +158,7 @@ that happens, close Studio and copy again; nothing else is locked.
 | `npm run sdk` | Fetches the two official Ulanzi SDK repos into `sdk/` |
 | `npm run native` | Compiles `PixyController.exe` and `PixyHidProbe.exe` into `plugin/native/` |
 | `npm run build` | Assembles `release/<uuid>.ulanziPlugin/` and checks it |
-| `npm test` | 125 tests, no camera, no deck, no helper binary |
+| `npm test` | 146 tests, no camera, no deck, no helper binary |
 | `npm run mock` | A stand-in Ulanzi Studio on port 3906, to drive the plugin without a deck |
 | `npm run release` | All three, then the tests |
 
@@ -194,7 +194,7 @@ keys, turns dials, and prints what the plugin sent back — it is not a second U
 
 ## 7. Tests
 
-`npm test` runs 125 tests. None of them touch hardware:
+`npm test` runs 146 tests. None of them touch hardware:
 
 - `bridge.test.js` — the line protocol against a fake process: pairing, serialisation,
   partial reads, deadlines, a dead helper, a missing one, quit-then-kill.
@@ -202,6 +202,11 @@ keys, turns dials, and prints what the plugin sent back — it is not a second U
 - `app.test.js` — the service driven through the real SDK with frames arriving on a fake
   socket, which is how the host drives it.
 - `params.test.js`, `dial.test.js` — the parsing and the axis rules.
+- `ui.test.js` — the knob readout: the layout is applied once per key, and an old host
+  that refuses a display command does not take down the handler that was about to move
+  the camera.
+- `shutdown.test.js` — the wiring onto `process`: the helper is stopped before the
+  process exits, and a helper that will not stop does not take the exit down with it.
 - `wiring.test.js` — the mistakes syntax checking cannot see: a call whose name was never
   imported, an action hook misspelled behind optional chaining, a second place spawning the
   camera helper.

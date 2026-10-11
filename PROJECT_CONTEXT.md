@@ -2188,3 +2188,54 @@ Verifie par mutation :
 - UNVERIFIED : le comportement dans Ulanzi Studio. C'est la premiere fois que le cycle
   complet est couvert par des tests, mais c'est aussi la premiere fois que le host est
   suppose repondre a une demande getSettings issue d'un panneau de ce plugin.
+---
+
+# 54 - Validation du plugin refactorise sur la camera et sur le D200X (2026-10-11)
+
+Recouvrement des UNVERIFIED des §47, §49 et §53.
+
+## Recouvrement : la refactorisation (§47)
+
+- CONFIRMED : le service refactorise, ses 15 modules et le bridge reconstruit a bien ete
+  utilise sur le D200X reel avec la camera PIXY branchee. Aucune erreur de chemin n'a ete
+  signalee.
+- CONFIRMED : les 4 panneaux d'inspecteur(^) se chargent et affichent leurs champs.
+- CONFIRMED : le cycle complet des reglages fonctionne - un choix fait dans un panneau est
+  conserve, relu a la reouverture, et ne peut pas etre ecrase par un autre champ. C'est le
+  dernier UNVERIFIED du §53 : l'hote repond bien a une demande getSettings emanant d'un
+  panneau de ce plugin.
+
+## Resultats fonctionnels (utilisateur, camera reelle + D200X)
+
+| Action | Resultat |
+| --- | --- |
+| Boutons Pan Gauche / Pan Droit | OK apres la correction du §49 |
+| Boutons Tilt Haut / Bas | OK |
+| Boutons Zoom + / - | OK |
+| Boutons Center | OK |
+| Presets de position (rappel court, enregistrement long) | OK |
+| Mode Standard | OK |
+| Mode Tracking | OK |
+| Mode Privacy | OK |
+| Encodeur Pan, Tilt, Zoom | OK apres la correction du §49 |
+| Encodeur PTZ cyclique | OK |
+| Reglage « Sens de panoramique » sur les 3 actions pan + PTZ | OK |
+| Persistance du reglage d'un panneau a l'autre | OK apres la correction du §53 |
+
+## Statuts
+
+- CONFIRMED : toutes les 19 actions de l'§2 sont exercees au moins une fois sur le materiel
+  et repondent correctement.
+- CONFIRMED : les 7 modes et positions de la table ci-dessus.
+- CONFIRMED : le §49 - inversion du pan corrigee sur les boutons et les encodeurs, fixe et
+  cyclique.
+- CONFIRMED : le §53 - les panneaux relisent leurs reglages, et un choix n'est plus ecrase
+  ni par un autre champ ni a la reouverture.
+- LIKELY : le §53 corrigeait aussi le stepSize, qui n'a jamais ete relu lui non plus. Non
+  verifie explicitement par l'utilisateur.
+- UNVERIFIED : cohabitation OBS + plugin en meme temps (le §29 a teste OBS + sonde, jamais
+  OBS + plugin installe).
+- UNVERIFIED : debranchement de la camera en cours d'utilisation, et le delai de 4 s du
+  bridge avec sa reconstruction.
+- UNVERIFIED : saut de la camera a la position start au demarrage du bridge.
+- UNVERIFIED : Zoom In a stepSize=20 (§43, non concluant a l'epoque, camera au maximum).

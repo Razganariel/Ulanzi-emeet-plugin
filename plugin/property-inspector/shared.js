@@ -1,15 +1,26 @@
 /**
  * Shared property inspector bootstrap.
  *
- * The three panels - move, zoom, encoder, positions - differ only in the fields their
- * markup declares. Written out per panel the same forty lines sat in three files, which is
- * how two of them ended up carrying a `defaultSettings` constant that nothing read: the
- * visible default was whatever the markup's `selected` attribute said, and the constant
- * above it said something else.
+ * The panels - move, zoom, encoder, positions - differ only in the fields their markup
+ * declares. Written out per panel the same forty lines sat in three files, which is how two
+ * of them ended up carrying a `defaultSettings` constant that nothing read: the visible
+ * default was whatever the markup's `selected` attribute said, and the constant above it
+ * said something else.
  *
  * A property inspector runs in a WebView with no console the user can reach, so anything
  * thrown here leaves the panel simply inert. The banner below is the only thing that turns
  * that into something reportable.
+ *
+ * Three rules the panels live by, each of them learned the hard way:
+ *
+ *  - **ask for the settings.** `connect()` does not fetch them, and the host only answers a
+ *    request. A panel that never asks shows the markup's defaults and nothing else, so
+ *    every setting reads as "reverted" each time it is opened.
+ *  - **never write a field that has not been read.** Saving the whole form sends the markup
+ *    default for every field the host did not supply, which silently destroys a stored
+ *    choice the moment the user touches an unrelated field.
+ *  - **write only what the user changed.** Same reason, narrower: the fields the panel did
+ *    not touch are echoed back from what the host last said.
  */
 (function () {
   const HOST_NOISE = /Still in CONNECTING state/;
@@ -39,49 +50,81 @@
   const FORM_ID = '#property-inspector';
 
   /**
-   * Connects the panel, fills it from the saved settings, and saves as it is edited.
+   * Connects the panel, fills it from the host, and saves what the user changes.
    *
-   * Settings are merged into what the panel already knows rather than replaced by it: the
-   * host answers one panel at a time, and the visible fields are all this plugin has, so a
-   * full replace is only ever a full copy of this same form.
+   * `known` is what the host has said this panel holds. It is the baseline every save is
+   * measured against, which is what keeps the markup's defaults out of the conversation.
    */
   function boot() {
-    let settings = {};
-
-    const form = document.querySelector(FORM_ID);
-    if (!form) {
-      reportFatal('Form not found', FORM_ID);
-      return;
-    }
+    let known = {};
+    let rendered = {};
+    let form = null;
 
     try {
+      form = document.querySelector(FORM_ID);
+      if (!form) {
+        reportFatal('Form not found', FORM_ID);
+        return;
+      }
+
       $UD.connect();
 
       // Enter inside a field submits the form, and a submitted form in a WebView
       // navigates, losing the panel and everything typed into it.
       form.addEventListener('submit', (event) => event.preventDefault());
-
       form.addEventListener('input', Utils.debounce(save, 150));
 
       $UD.onConnected(() => {
         form.classList.remove('hidden');
         const wrapper = document.querySelector('.uspi-wrapper');
         if (wrapper) wrapper.classList.remove('hidden');
+        // The host answers a request, it does not volunteer. Without this the panel is
+        // write-only: it can change a setting but can never show what it is set to.
+        $UD.getSettings();
       });
 
-      $UD.onDidReceiveSettings((message) => {
-        if (!message || !message.settings) return;
-        settings = { ...settings, ...message.settings };
-        Utils.setFormValue(settings, form);
-      });
+      const hydrate = (incoming) => {
+        if (!incoming || typeof incoming !== 'object') return;
+        known = { ...known, ...incoming };
+        Utils.setFormValue(known, form);
+        rendered = Utils.getFormValue(form);
+      };
+
+      // Two events carry the same payload and mean the same thing: the answer to our
+      // request, and the copy the host sends once a panel has been opened for a key that
+      // moved. Listening to only one of them leaves the panel blank depending on how the
+      // user got to it.
+      $UD.onDidReceiveSettings((message) => hydrate(message && message.settings));
+      $UD.onParamFromApp((message) => hydrate(message && message.param));
+
+      rendered = Utils.getFormValue(form);
     } catch (err) {
       reportFatal('Property inspector failed to start', err);
       throw err;
     }
 
+    /**
+     * Saves the fields the user actually changed, over what the host already has.
+     *
+     * A whole-form save is what broke this: a field the host never supplied came back with
+     * the markup's `selected` value, so editing the step size silently reset the pan
+     * direction, and reopening the panel made it look like nothing had been saved at all.
+     *
+     * The baseline for a field is what the host holds, and only what is on screen when the
+     * host never said. Measuring against the markup alone would send every field the
+     * moment the panel opened, which is the same data loss by a different route.
+     */
     function save() {
-      settings = { ...settings, ...Utils.getFormValue(form) };
-      $UD.setSettings(settings);
+      const current = Utils.getFormValue(form);
+      const changed = {};
+      for (const name of Object.keys(current)) {
+        const baseline = name in known ? known[name] : rendered[name];
+        if (current[name] !== baseline) changed[name] = current[name];
+      }
+      if (!Object.keys(changed).length) return;
+
+      known = { ...known, ...changed };
+      $UD.setSettings(known);
     }
   }
 

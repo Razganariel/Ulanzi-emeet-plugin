@@ -2098,3 +2098,93 @@ qu'a certains axes doit avoir son propre panneau**, sinon il apparait la ou il n
   Pan Encoder, PTZ Encoder - exposent le reglage ; les autres ne l'exposent pas.
 - CONFIRMED : le reglage ne modifie ni Tilt ni Zoom, sur aucun des quatresencodeurs.
 - UNVERIFIED : le rendu des panneaux dans Ulanzi Studio, comme au §51.
+---
+
+# 53 - Cause reelle du reset du reglage : les panneaux n'ont jamais relu (2026-10-11)
+
+Le §52 avait corrige un defaut reel mais pas la cause. Retour utilisateur : le choix
+revenait toujours sur « Normal », et « semble creer des confusions ».
+
+## Analyse
+
+En suivant le trajet d'une valeur depuis le panneau jusqu'a l'hote, trois maillons
+manquaient. Aucun ne produzait d'erreur : tous trois etaient silencieux.
+
+### 1. Le panneau ne demandait jamais ses reglages
+
+- connect() dans le SDK **n'envoie rien** : il ne fait que lire les parametres d'URL.
+- didReceiveSettings est la **reponse** a une demande getSettings(), pas un envoi
+  spontane de l'hote.
+- Notre shared.js n'appelait **jamais** getSettings().
+
+Consequence : les panneaux etaient **uniquement/ecrivants**. Ils pouvaient changer un
+reglage mais ne pouvaient jamais afficher ce qu'il valait. A chaque ouverture, ils
+affichaient les valeurs selected du markup - donc « Normal » paraissait toujours avoir
+ete perdu.
+
+### 2. La sauvegarde envoyait le formulaire entier
+
+    settings = { ...settings, ...Utils.getFormValue(form) };
+
+Tout champ que l'hote n'avait pas fourni revenait avec sa valeur selected du markup.
+Ouvrir le panneau puis toucher **un seul autre champ** suffisait a ecraser le choix. C'est
+la source des « confusions » : la valeur affichee et la valeur stockee divergeaient en
+permanence.
+
+### 3. Le service ne demandait rien non plus
+
+pp.js n'avait aucun gestionnaire : il ne demandait pas les reglages a l'hote pour une
+cle ajoutee, et ignorait paramfromapp - la meme charge utile sous un autre nom, envoyee
+une fois qu'un panneau a ete ouvert pour une cle deplacee.
+
+## Pourquoi stepSize paraissait fonctionner
+
+Le defaut du markup etait identique au defaut du code (10 pour le deplacement, 5 pour le
+zoom, 1 pour l'encodeur). Un reglage coherent avec son defaut semble fonctionner meme
+qu'il n'est jamais relu. Seuls les reglages **non par defaut** - donc exactement le nouveau
+reglage de sens - rendaient la panne visible.
+
+C'est le point le plus important de cette analyse : ce bug aurait ete invisible sur tous les
+autres reglages du plugin.
+
+## Correction
+
+shared.js :
+
+- appelle $UD.getSettings() une fois connecte ;
+- ecoute aussi onParamFromApp en plus de onDidReceiveSettings ;
+- n'envoie plus que les champs **reellement modifies**, mesures contre la valeur que
+  l'hote declare, et contre l'ecran seul pour un champ que l'hote n'a jamais dit.
+
+pp.js :
+
+- $UD.getSettings(context) a l'ajout d'une cle ;
+- gestionnaire onParamFromApp, meme traitement que onDidReceiveSettings.
+
+## Regle qui en sort
+
+Un panneau ne doit jamais ecrire un champ qu'il n'a pas lu. Plus generalement : **tout
+reglage doit faire un aller-retour complet avant d'etre considere fonctionnel**, et un
+reglage dont le defaut du panneau coincide avec le defaut du code ne prouve rien.
+
+## Tests
+
+Nouveau 	ests/property-inspector.test.js : shared.js est charge dans un contexte VM
+avec un DOM minimal, un $UD et un Utils factices, et pilote par les memes evenements
+que l'hote envoie. 9 cas couvrant la demande, l'hydratation, l'absence d'envoi quand rien
+n'a ete modifie, la non-regression des champs non touches, et le cas d'un panneau qui n'a
+jamais recu ses reglages.
+
+Verifie par mutation :
+
+- supprimer getSettings() -> 1 echec ;
+- restaurer la sauvegarde du formulaire entier -> 3 echecs.
+
+## Statuts
+
+- CONFIRMED : les panneaux n'avaient jamais demande leurs reglages ; desormais ils le font.
+- CONFIRMED : un champ non touche n'est plus renvoye a l'hote.
+- CONFIRMED : 125 tests passent.
+- UNVERIFIED : le comportement dans Ulanzi Studio. C'est la premiere fois que le cycle
+  complet est couvert par des tests, mais c'est aussi la premiere fois que le host est
+  suppose repondre a une demande getSettings issue d'un panneau de ce plugin.

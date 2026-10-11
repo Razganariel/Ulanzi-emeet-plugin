@@ -127,6 +127,11 @@ $UD.onAdd((message) => {
   // Only the host's own copy of the settings. The action's defaults were seeded when the
   // entry was created, and re-merging them here would overwrite whatever the user chose.
   mergeSettings(ctx.entry, message.param);
+  // The host answers a request rather than volunteering, so ask it for this key's stored
+  // settings. Without this the entry holds nothing but the defaults until someone happens
+  // to open the panel and save, and a panel that opens before that shows the defaults
+  // instead of what is actually stored.
+  $UD.getSettings(ctx.context);
   log(`action added: ${message.context}`);
   ctx.action.render?.(ctx);
 });
@@ -149,6 +154,15 @@ $UD.onDidReceiveSettings((message) => {
   const ctx = contextFor(message);
   if (!ctx) return;
   mergeSettings(ctx.entry, message.settings);
+});
+
+// The same payload under another name, which the host sends once a panel has been opened
+// for a key that moved. Ignoring it left the entry - and the panel that had just
+// hydrated - describing the key the action used to be on.
+$UD.onParamFromApp((message) => {
+  const ctx = contextFor(message);
+  if (!ctx) return;
+  mergeSettings(ctx.entry, message.param);
 });
 
 $UD.onKeyDown((message) => {

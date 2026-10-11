@@ -227,6 +227,37 @@ test('a frame with no fields at all is survivable', async () => {
   assert.doesNotThrow(() => socket.onmessage({ data: JSON.stringify({ cmd: 'run' }) }));
 });
 
+test('adding a key asks the host for the settings it already holds', () => {
+  // The host answers a request, it does not volunteer. Without this the entry holds
+  // nothing but the action defaults until someone opens the panel and saves, and a panel
+  // opened before that shows defaults instead of what is stored.
+  ws.sent.splice(0);
+  host('add', { uuid: `${UUID}.panleft`, key: '7_1', actionid: 'q1' });
+
+  const asked = ws.sent
+    .map((raw) => JSON.parse(raw))
+    .filter((frame) => frame.cmd === 'getSettings');
+  assert.ok(asked.length, 'the service asked');
+  assert.equal(asked[0].uuid, `${UUID}.panleft`, 'for the key that just appeared');
+});
+
+test('the settings the host sends for a moved key are taken too', async () => {
+  // `paramfromapp` is the same payload under another name, sent once a panel has been
+  // opened for a key that moved. Ignoring it left the entry describing the key the action
+  // used to be on.
+  const uuid = `${UUID}.panleft`;
+  const key = '7_2';
+
+  host('add', { uuid, key, actionid: 'q2' });
+  socket.onmessage({
+    data: JSON.stringify({ uuid, key, actionid: 'q2', cmd: 'paramfromapp', param: { panDirection: 'inverted' } }),
+  });
+
+  host('keydown', { uuid, key, actionid: 'q2' });
+  await settle();
+  assert.equal(bridge.last('move').delta, -10, 'the setting the host announced is in force');
+});
+
 test('a choice made in a panel survives the key being looked at again', async () => {
   // The regression this file exists for. The host answers a panel before it announces the
   // key, so the settings were already stored when the action's defaults were merged on top

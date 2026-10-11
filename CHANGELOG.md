@@ -19,13 +19,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   prefers the other feel with no way out, and would have broken for everyone the day EMEET
   fixed it. Tilt and zoom conform to the specification and get no such setting: a
   preference that changes nothing is worse than none.
-- 110 tests over `npm test`, none of which need a camera, a deck or the helper binary.
+- 125 tests over `npm test`, none of which need a camera, a deck or the helper binary.
 
 ### Fixed
 
+- **The property inspector panels could write settings but never read them.** They never
+  asked the host for them — `connect()` sends nothing, and `didReceiveSettings` is the
+  answer to a `getSettings()` request, not something the host volunteers. Every panel
+  therefore showed its markup defaults every time it was opened, so any setting looked
+  like it had reverted. Worse, saving merged the whole form, so touching one field wrote
+  the markup default over every field the host had never supplied. This was invisible on
+  every other setting because their panel default happened to equal the code default; only
+  the pan direction, being new, exposed it.
+
+  The panels now ask for their settings on connect, listen to `paramfromapp` as well, and
+  send only the fields the user actually changed. The service asks the host for a key's
+  settings when the key appears, and takes `paramfromapp` too.
 - **A setting made in a property inspector panel is no longer undone when the key is
   looked at again.** The host answers a panel before it announces the key, and the
-  action's defaults were merged on top of the stored settings on every add: a pan
+  action''s defaults were merged on top of the stored settings on every add: a pan
   direction chosen as "inverted" went back to "normal" every time the user moved to
   another button and came back. Defaults are now applied when an entry is created and
   never again — the only way a default can overwrite a choice without anything

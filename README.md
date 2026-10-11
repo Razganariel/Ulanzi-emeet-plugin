@@ -158,7 +158,7 @@ that happens, close Studio and copy again; nothing else is locked.
 | `npm run sdk` | Fetches the two official Ulanzi SDK repos into `sdk/` |
 | `npm run native` | Compiles `PixyController.exe` and `PixyHidProbe.exe` into `plugin/native/` |
 | `npm run build` | Assembles `release/<uuid>.ulanziPlugin/` and checks it |
-| `npm test` | 104 tests, no camera, no deck, no helper binary |
+| `npm test` | 125 tests, no camera, no deck, no helper binary |
 | `npm run mock` | A stand-in Ulanzi Studio on port 3906, to drive the plugin without a deck |
 | `npm run release` | All three, then the tests |
 
@@ -194,7 +194,7 @@ keys, turns dials, and prints what the plugin sent back — it is not a second U
 
 ## 7. Tests
 
-`npm test` runs 104 tests. None of them touch hardware:
+`npm test` runs 125 tests. None of them touch hardware:
 
 - `bridge.test.js` — the line protocol against a fake process: pairing, serialisation,
   partial reads, deadlines, a dead helper, a missing one, quit-then-kill.
@@ -210,6 +210,10 @@ keys, turns dials, and prints what the plugin sent back — it is not a second U
   droppable on a dial — that regression happened, see PROJECT_CONTEXT.md §37).
 - `mock-studio.test.js` — the stand-in Studio over a real socket, against Node's built-in
   WebSocket client. Both are exercised so neither can be right in the same wrong way.
+- `property-inspector.test.js` — the panels, loaded in a VM against a fake DOM and a fake
+  host SDK, and driven by the same events the host sends. They were write-only until this
+  existed: a panel that never asks the host for its settings cannot show them, and nothing
+  else noticed.
 
 ## 8. Hardware verification
 

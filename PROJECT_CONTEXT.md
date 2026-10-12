@@ -1608,7 +1608,9 @@ Décision utilisateur (2026-09-26) : `D:\Projets\v2-modes-fonctionnels` n'est pl
 - CONFIRMED : chaque `Icon`/`State.Image` référence un fichier existant (15 chemins uniques).
 - CONFIRMED : toutes les `Images/gradient-*.png` sont des PNG 96×96 valides.
 - CONFIRMED : files installés (hashes manifest + 15 images identiques source = installé).
-- `gradient-arrow-return.png` présent dans le dossier mais non référencé dans le manifest.
+- ~~`gradient-arrow-return.png` présent dans le dossier mais non référencé dans le
+  manifeste~~ — **supprimé, voir §57** : avec `gradient-arrow-restart.png`,
+  `gradient-camera.png` et `gradient-start.png`, c'était une icône morte.
 
 ## Statuts
 
@@ -1690,8 +1692,10 @@ explicitement si un inspector référence un fichier absent de la sortie.
   La validation matérielle (§29 OBS, §33 HID, §34 presets) date d'avant et reste valable
   sur le plan fonctionnel, mais les chemins d'icônes (`Images/` → `images/`) et le
   `CodePath` n'ont pas été revus par l'hôte. À confirmer au prochain démarrage de Studio.
-- LIKELY : `manifest.json` gagnerait à passer `Images/` en SVG comme les deux autres
-  plugins ; non fait à cette étape (hors périmètre).
+- ~~LIKELY : `manifest.json` gagnerait à passer `Images/` en SVG comme les deux autres
+  plugins~~ — **REJECTED, voir §56** : une conversion PNG → SVG a été faite puis
+  mesurée. Elle ne produit aucun tracé, seulement une enveloppe `<image>` en base64.
+  On garde les PNG.
 
 ---
 
@@ -1779,8 +1783,9 @@ pm run build produit un bundle complet ; 15 modules de service et 1 module
   plan fonctionnel, mais les corrections de cette section sont vérifiées par test, pas par
   la caméra. À confirmer au prochain essai sur la PIXY, en particulier le délai de 4 s et
   la reconstruction du bridge.
-- LIKELY : manifest.json gagnerait à passer images/ en SVG comme les deux autres
-  plugins ; non fait, hors périmètre.
+- ~~LIKELY : manifest.json gagnerait à passer images/ en SVG comme les deux autres
+  plugins~~ — **REJECTED, voir §56** : conversion mesurée, aucun tracé produit,
+  + 64 % de poids. On garde les PNG.
 ---
 
 # 48 - Audit P1 : garde-fous non physiques (2026-10-11)
@@ -2356,3 +2361,148 @@ resultat etait un echec sur un test correct.
   Node n'emet pas SIGTERM a la fermeture d'une fenetre. Le chemin propre est donc
   probablement Ctrl-C et non la fermeture de Studio. Non verifie, et hors perimetre ici :
   aucun test ne peut etablir ce que fait l'hote a la fermeture.
+
+---
+
+# 56 - Icônes : le passage en SVG est REJECTED
+
+Date : 2026-10-12. Clôt le point laissé **LIKELY** par les §46 et §47 (« `manifest.json`
+gagnerait à passer `images/` en SVG comme les deux autres plugins »).
+
+## Origine
+
+Les deux projets frères sont vectoriels : `Ulanzi-neewer-plugin` compte 75 SVG dont 62 avec
+`path`, `Ulanzi-elgato-wave-link-plugin` 63 SVG dont 60 avec `path`, et **aucun** des deux
+ne contient de base64. L'alignement du dépôt semblait donc désirable.
+
+L'utilisateur a converti lui-même les 25 icônes `images/*.png` (96 × 96) en SVG et les a
+déposées dans `plugin/images-svg/`, pour éviter que l'agent ne les refasse.
+
+## Mesure
+
+Les 25 fichiers ont été analysés (`python` 3.14 + Pillow 12.3.0, `ElementTree`) :
+
+| Contrôle | Résultat |
+|---|---|
+| XML bien formé, `viewBox="0 0 96 96"` | 25/25 |
+| Élément `path` (géométrie vectorielle) | **0/25** |
+| Élément `image` + base64 | **25/25** |
+| Pixels identiques au PNG d'origine | **25/25** |
+| Poids moyen par rapport au PNG | **+ 64 %** (médiane 6,9 Ko contre 3,4 Ko) |
+
+La structure est, pour les 25 :
+
+```xml
+<svg width="96px" height="96px" viewBox="0 0 96 96">
+  <image id="image0" width="96" height="96" x="0" y="0"
+         xlink:href="data:image/png;base64,..."/>
+</svg>
+```
+
+Autrement dit : le PNG d'origine, ré-encodé en base64 dans une enveloppe XML. Rien n'a été
+vectorisé. Le fichier ne diffère de l'original que par son poids — `gradient-ptz.png` passe
+de 40,7 Ko à 21,3 Ko parce que le ré-encode est plus efficace, les 24 autres grossissent.
+
+## Conclusion
+
+- **REJECTED** — la conversion change l'extension, pas la nature du fichier. Elle donne
+  l'illusion d'un alignement sur les projets frères sans le fond : à côté d'un tracé de
+  0,7 Ko, on placerait un raster déguisé de 6,9 Ko.
+- Aucun gain visuel : les 25 images sont identiques pixel par pixel (vérifié par
+  `ImageChops.difference`).
+- Aucun gain de netteté : à 96 × 96 affiché en fixe, le vectoriel n'apporte rien.
+- Aucun besoin fonctionnel : le plugin fonctionne en PNG depuis la validation matérielle
+  du §54.
+
+## Décision
+
+**On garde les PNG.** Le dossier `plugin/images-svg/` est supprimé. Aucune modification du
+manifeste.
+
+## Ce qu'il faudrait pour un vrai SVG
+
+Repartir de la source de design, pas du PNG. Ces icônes ont des dégradés et de
+l'antialiasing — `gradient-ptz.png` compte 3 818 couleurs distinctes — et une
+vectorisation automatique depuis le raster donnerait soit un fichier énorme, soit un rendu
+visiblement dégradé. C'est une question d'Ale / Figma, pas de script.
+
+---
+
+# 57 - Allègement des icônes et suppression des images mortes
+
+Date : 2026-10-12. Suite du §56 : après avoir tranché la question du format, l'audit des
+icônes elles-mêmes a trouvé deux choses réparables.
+
+## Format : rien à corriger
+
+Les 25 images sont homogeneous sans exception — releve du chunk IHDR, pas du mode
+Pillow :
+
+- 96 × 96, **8 bits**, type couleur **RGBA**, **non entrelacees** ;
+- **un seul format** pour les 25, donc rien a normaliser ;
+- aucun doublon (meme contenu sous deux noms differents) ;
+- `manifest.test.js` verifie deja que chaque icone nommee existe, et
+  `manifest.test.js:53` couvre le cas general.
+
+## Point 1 — 4 images mortes
+
+`gradient-arrow-restart.png`, `gradient-arrow-return.png`, `gradient-camera.png` et
+`gradient-start.png` n'etaient **referencees nulle part**. Ce sont les icones que les choix
+utilisateur du §41 et du §45 avaient remplacees : `gradient-move.png` a pris la place de
+`gradient-arrow-restart.png`, et `preset-0.png` celle de `gradient-start.png`.
+
+Supprimees : 15,2 Ko embarques pour rien.
+
+Une verification a confirme qu'aucun code ne les citait non plus — manifeste, `constants.js`
+et sources comprises. Elles restent dans l'historique git et se recuperent par
+`git checkout HEAD -- plugin/images/<nom>.png`.
+
+## Point 2 — 9 images compressables
+
+Les PNG avaient ete produit par un outil que Pillow compresse moins bien. Le gain est
+reel mais **concentre** :
+
+| Image | Avant | Apres | Gain |
+|---|---|---|---|
+| `gradient-ptz.png` | 40,7 Ko | 14,5 Ko | **−64 %** |
+| `preset-1` a `preset-5` | 38,1 Ko | 33,5 Ko | −12 % |
+| `gradient-arrow-vertical.png` | 3,2 Ko | 2,9 Ko | −9 % |
+| `EMEETPIXYDual.png` | 8,2 Ko | 7,7 Ko | −6 % |
+| `preset-0.png` | 10,0 Ko | 9,2 Ko | −8 % |
+| les 16 autres | — | — | 0 % |
+
+**−32 Ko**, du seul fait que `gradient-ptz.png` est passe de 40,7 a 14,5 Ko.
+
+### La methode, et pourquoi elle est bornee
+
+Un premier essai a reencode les 25 fichiers avec `optimize=True` et annoncait « 16 % de
+gain ». C'etait trompeur, et le script ecrivait dans le depot alors qu'il ne devait que
+mesurer : **17 des 25 images avaient grossi**. Pillow y choisit une strategie de filtre par
+ligne moins bonne que celle de l'outil d'origine ; le gain total ne venait presque que de
+`gradient-ptz`. Le renvoi par `git checkout` a restaure l'etat.
+
+La methode retenue est donc plus bete : partir des octets d'origine, essayer plusieurs
+encodages, et **n'ecrire que si le resultat est strictement plus petit**. Un encodage qui
+degrade est ecarte par construction, une comparaison d'image l'ayant precede. 9 fichiers sur
+25 en sont beneficies, aucun n'a grossi.
+
+Verification : les 9 ecrits ont ete compares a `HEAD` par `ImageChops.difference`,
+**0 pixel different sur les 9**.
+
+## Bilan
+
+| | Avant | Apres |
+|---|---|---|
+| Fichiers dans `plugin/images/` | 25 | 21 |
+| Poids du dossier | 158,7 Ko | **111,2 Ko** |
+| Poids total du payload livre | — | 0,5 Mo |
+
+- CONFIRMED : 146 tests passent ; `npm run build` produit un payload dont `images/` est
+  identique a `plugin/images/` (21 fichiers, 111,2 Ko).
+- CONFIRMED : 21 chemins d'image distincts cites dans le depot, tous resolus ; aucune des
+  21 images restantes n'est orpheline.
+- CONFIRMED : les 4 suppressions ne cassent aucune reference, dans le manifeste comme dans
+  le code.
+- CONFIRMED : `gradient-ptz.png`, le plus recompressé (−64 %), s'affiche correctement sous
+  Ulanzi Studio et sur le Stream Deck (validé par l'utilisateur le 2026-10-12, après
+  réinstallation). La recompression sans perte ne casse donc rien au rendu.

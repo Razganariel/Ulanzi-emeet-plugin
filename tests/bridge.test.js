@@ -119,7 +119,7 @@ test('a line that is not an answer is ignored and does not fail the command', as
   const { bridge, proc, logs } = harness();
   const answer = bridge.request({ cmd: 'get' });
 
-  proc.reply('PixyController 0.1.0');
+  proc.reply('PixyController 1.0.0');
   proc.reply('{"ok":true,"pan":10}');
 
   assert.deepEqual(await answer, { ok: true, pan: 10 }, 'the real answer still arrived');

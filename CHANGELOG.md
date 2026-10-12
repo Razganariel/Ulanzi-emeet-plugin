@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-10-12
+
 ### Added
 
 - 19 actions on the D200X: pan/tilt/zoom buttons with a configurable step, center,
@@ -19,9 +21,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   prefers the other feel with no way out, and would have broken for everyone the day EMEET
   fixed it. Tilt and zoom conform to the specification and get no such setting: a
   preference that changes nothing is worse than none.
-- 126 tests over `npm test`, none of which need a camera, a deck or the helper binary.
+- 147 tests over `npm test`, none of which need a camera, a deck or the helper binary.
+- One of them ties the two places the default step lives together: the `selected` option
+  in a panel and the fallback the service applies. They had no relation, and every test
+  passed while the code said 1 and the panels said 10 and 5.
 
 ### Fixed
+- `core/ui.js` and `core/shutdown.js` now have tests of their own (9 and 11 cases). Both
+  are unchanged, and both were written around properties that do not show up when you read
+  them: the encoder layout is applied once per key rather than on every repaint, and an
+  old host that refuses a display command must not take down the handler that was about to
+  move the camera. The shutdown module wires itself onto `process`, so the tests replace
+  `process.on` and `process.exit` to capture the handlers instead of letting them
+  install for real.
 - **Licensed under the GNU Affero General Public License v3.0 or later.** `LICENSE` is the
   canonical text from gnu.org; `THIRD-PARTY.md` names what ships inside the bundle under
   its own terms (`ws` MIT, the two Ulanzi SDKs Apache-2.0); both `package.json` files
@@ -120,8 +132,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   context, dial, params, ui, shutdown, constants). Nothing is reachable from app.js that a
   test cannot reach without hardware.
 - The three property inspectors keep their own markup and share one script.
+- **The default step is 1 on every axis.** Pan and tilt defaulted to 10 and zoom to 5,
+  two values measured on the camera (section 43). A key nobody has configured now moves
+  as little as the driver allows, and any other size is a deliberate choice in the
+  property inspector. `DEFAULT_ZOOM_STEP` went with the distinction: both constants were
+  1, and a branch whose two sides are equal describes nothing. The dropdown still offers
+  1 to 30, and a typed value up to 100 is still accepted.
 
-### Removed
+### Added
 
 - `wiring.test.js` and `manifest.test.js`: the mistakes syntax checking cannot see - a
   call whose name was never imported, an action hook misspelled behind optional chaining, an
@@ -135,6 +153,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   is itself tested against Node's built-in WebSocket client.
 
 ### Removed
+- **Four icons nothing referenced.** `gradient-arrow-restart.png`,
+  `gradient-arrow-return.png`, `gradient-camera.png` and `gradient-start.png` are the ones
+  the user's own choices replaced earlier in the project's history. 15.2 KB travelled in
+  the payload for nothing; no code cited them either.
+- **Nine icons recompressed, losslessly.** `plugin/images/` went from 25 files and 158.7 KB
+  to 21 and 111.2 KB. `gradient-ptz.png` alone went from 40.7 KB to 14.5 KB. The method
+  starts from the original bytes and only keeps an encoding that is strictly smaller, so
+  no file grew - a first attempt with `optimize=True` grew 17 of the 25. Every file
+  verified pixel-identical to the previous one.
 - `native/PixyCameraControlDiagnostic/PixyCameraControlDiagnostic.csproj`. It declared
   `net8.0-windows` while the only documented build is the .NET Framework compiler that
   ships with Windows, and the .NET 8 SDK is not installed on the build machine. A project
@@ -143,6 +170,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `property-inspector/*/inspector.js`, superseded by `property-inspector/shared.js`.
 
 ### Repository
+
+- `PROJECT_CONTEXT.md` was rebuilt. The committed file held sections 1 to 54 twice, 107 KB
+  duplicated by a PowerShell split on CRLF of an LF file, unnoticed through two merges.
+  Nine control characters were repaired in the same pass - PowerShell had read backticks
+  as escapes, so `app.test.js` read as `pp.test.js` and `failAll()` as `ailAll()`.
+- `AGENTS.md` gained a section on how files must be written, after six write incidents in
+  one session: none of them would have been visible in a diff of line counts.
 
 - **Repository restructured** to match `Ulanzi-neewer-plugin` and
   `Ulanzi-elgato-wave-link-plugin`. The installable `.ulanziPlugin` folder is no

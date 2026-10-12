@@ -3,7 +3,7 @@
   "Name": "PIXY PTZ",
   "Description": "Controle PTZ de la caméra EMEET PIXY 4K via UVC (sans EMEET Studio)",
   "Icon": "images/EMEETPIXYDual.png",
-  "Version": "0.1.0",
+  "Version": "1.0.0",
   "Category": "PIXY",
   "CategoryIcon": "images/EMEETPIXYDual.png",
   "CodePath": "service/app.js",

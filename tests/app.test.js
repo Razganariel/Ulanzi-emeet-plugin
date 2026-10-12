@@ -63,9 +63,9 @@ test('a press on a move key asks the camera for one movement', async () => {
   host('keydown', { key: '1_1', actionid: 'a1' });
   await settle();
 
-  // Pan Left is +10 on this camera: a positive pan moves the head left. Measured, see
-  // PROJECT_CONTEXT.md section 49.
-  assert.deepEqual(bridge.last('move'), { cmd: 'move', axis: 'pan', delta: 10 });
+  // Pan Left is +1 on this camera: a positive pan moves the head left. Measured, see
+  // PROJECT_CONTEXT.md section 49. The step is the default, one unit.
+  assert.deepEqual(bridge.last('move'), { cmd: 'move', axis: 'pan', delta: 1 });
 });
 
 test('a step set in the panel is the step that is used', async () => {
@@ -95,7 +95,7 @@ test('a key pressed before it was ever added still works', async () => {
   host('keydown', { key: '9_9', actionid: 'never-added', uuid: `${UUID}.zoomout` });
   await settle();
 
-  assert.deepEqual(bridge.last('move'), { cmd: 'move', axis: 'zoom', delta: -5 });
+  assert.deepEqual(bridge.last('move'), { cmd: 'move', axis: 'zoom', delta: -1 });
 });
 
 test('an action the plugin does not know produces no work', async () => {
@@ -208,7 +208,7 @@ test('a camera that is not there does not take the deck down', async () => {
   setBridge(bridge);
   host('keydown', { key: '1_1', actionid: 'a1' });
   await settle();
-  assert.deepEqual(bridge.last('move'), { cmd: 'move', axis: 'pan', delta: 10 });
+  assert.deepEqual(bridge.last('move'), { cmd: 'move', axis: 'pan', delta: 1 });
 });
 
 test('a frame that is not JSON does not take the service down', async () => {
@@ -255,7 +255,7 @@ test('the settings the host sends for a moved key are taken too', async () => {
 
   host('keydown', { uuid, key, actionid: 'q2' });
   await settle();
-  assert.equal(bridge.last('move').delta, -10, 'the setting the host announced is in force');
+  assert.equal(bridge.last('move').delta, -1, 'the setting the host announced is in force');
 });
 
 test('a choice made in a panel survives the key being looked at again', async () => {
@@ -271,7 +271,7 @@ test('a choice made in a panel survives the key being looked at again', async ()
   host('keydown', { uuid, key, actionid: 's1' });
   host('keyup', { uuid, key, actionid: 's1' });
   await settle();
-  assert.equal(bridge.last('move').delta, -10, 'the first press used the choice');
+  assert.equal(bridge.last('move').delta, -1, 'the first press used the choice');
 
   // The user goes to another button and comes back. No settings are sent this time: the
   // host already stored them, and the entry still holds them.
@@ -280,7 +280,7 @@ test('a choice made in a panel survives the key being looked at again', async ()
   host('keydown', { uuid, key, actionid: 's1' });
   await settle();
 
-  assert.equal(bridge.last('move').delta, -10, 'the choice is still in force');
+  assert.equal(bridge.last('move').delta, -1, 'the choice is still in force');
 });
 
 test('a key that has never been configured uses the action defaults', async () => {
@@ -290,7 +290,7 @@ test('a key that has never been configured uses the action defaults', async () =
   host('keydown', { uuid: `${UUID}.panright`, key: '8_2', actionid: 's2' });
   await settle();
 
-  assert.equal(bridge.last('move').delta, -10, 'the default step and the default direction');
+  assert.equal(bridge.last('move').delta, -1, 'the default step and the default direction');
 });
 
 test('the cycling encoder honours the pan direction while it is on pan', async () => {

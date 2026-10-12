@@ -76,10 +76,10 @@ test('pan and tilt move one step in the right direction', async () => {
   // PROJECT_CONTEXT.md section 49 - so the two rows below are not negatives of each other
   // by accident, they are the axis polarity doing its job.
   const cases = [
-    [ACTION.PAN_LEFT, AXIS.PAN, 10],
-    [ACTION.PAN_RIGHT, AXIS.PAN, -10],
-    [ACTION.TILT_UP, AXIS.TILT, 10],
-    [ACTION.TILT_DOWN, AXIS.TILT, -10],
+    [ACTION.PAN_LEFT, AXIS.PAN, 1],
+    [ACTION.PAN_RIGHT, AXIS.PAN, -1],
+    [ACTION.TILT_UP, AXIS.TILT, 1],
+    [ACTION.TILT_DOWN, AXIS.TILT, -1],
   ];
 
   for (const [uuid, axis, delta] of cases) {
@@ -97,8 +97,8 @@ test('the pan direction a user chooses is applied to the pan keys', async () => 
   const inverted = ctxFor(ACTION.PAN_LEFT, { panDirection: 'inverted' });
   await findByUuid(ACTION.PAN_LEFT).onRun(inverted.ctx);
 
-  assert.equal(normal.bridge.last('move').delta, 10, 'normal moves left');
-  assert.equal(inverted.bridge.last('move').delta, -10, 'inverted moves right');
+  assert.equal(normal.bridge.last('move').delta, 1, 'normal moves left');
+  assert.equal(inverted.bridge.last('move').delta, -1, 'inverted moves right');
 });
 
 test('the pan direction does not touch tilt or zoom', async () => {
@@ -191,16 +191,19 @@ test('a key and its encoder move the head the same way', async () => {
   }
 });
 
-test('zoom defaults to half the step of the other axes', async () => {
-  // Zoom tops out at 150 while pan runs far wider, so the same request would walk straight
-  // past the useful part of it. Measured on the camera, PROJECT_CONTEXT.md section 43.
-  const { ctx, bridge } = ctxFor(ACTION.ZOOM_IN);
-  await findByUuid(ACTION.ZOOM_IN).onRun(ctx);
-  assert.equal(bridge.last('move').delta, 5);
+test('every axis defaults to the same minimum step', async () => {
+  // Zoom used to default to half of pan's, because its range tops out at 150 while pan runs
+  // far wider. Both are 1 now, at the user's request: an unconfigured key moves as little as
+  // the driver allows. Measured on the camera, PROJECT_CONTEXT.md section 43.
+  for (const [uuid, delta] of [[ACTION.ZOOM_IN, 1], [ACTION.ZOOM_OUT, -1]]) {
+    const { ctx, bridge } = ctxFor(uuid);
+    await findByUuid(uuid).onRun(ctx);
+    assert.equal(bridge.last('move').delta, delta, `${uuid}`);
+  }
 
   const pan = ctxFor(ACTION.PAN_RIGHT);
   await findByUuid(ACTION.PAN_RIGHT).onRun(pan.ctx);
-  assert.equal(pan.bridge.last('move').delta, -10, 'pan moves right with a negative driver value');
+  assert.equal(pan.bridge.last('move').delta, -1, 'pan moves right with a negative driver value');
 });
 
 test("a key's own step overrides the default", async () => {
@@ -373,9 +376,13 @@ test('a helper that cannot be reached does not take the deck down', async () => 
   await assert.rejects(findByUuid(ACTION.PAN_RIGHT).onRun(ctx), /bridge timed out/);
 });
 
-test('the settings defaults follow the axis, not the module', async () => {
-  assert.equal(defaultsFor(ACTION.PAN_LEFT).stepSize, 10);
-  assert.equal(defaultsFor(ACTION.ZOOM_IN).stepSize, 5);
+test('an unconfigured step stays at the minimum, on every axis', async () => {
+  // Zoom used to default to half of pan's, because its range is narrower. Both are 1 now:
+  // a key nobody has configured moves as little as the driver allows, and any other size is
+  // a deliberate choice. A centre has no step to default at all.
+  assert.equal(defaultsFor(ACTION.PAN_LEFT).stepSize, 1);
+  assert.equal(defaultsFor(ACTION.TILT_UP).stepSize, 1);
+  assert.equal(defaultsFor(ACTION.ZOOM_IN).stepSize, 1);
   assert.equal(defaultsFor(ACTION.CENTER).stepSize, undefined);
 });
 

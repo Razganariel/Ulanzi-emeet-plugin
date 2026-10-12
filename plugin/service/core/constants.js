@@ -101,18 +101,18 @@ export const ENCODER_ICONS = Object.freeze({
 });
 
 /**
- * Default movement step, per axis, in UVC units.
+ * Default movement step, in UVC units. One, on every axis and every control.
  *
- * Zoom needs a smaller step than pan for the same physical amount of movement: the PIXY
- * zoom range is narrow, so a step that looks reasonable on pan walks straight past the
- * useful part of it. The controller clamps every value to the hardware range, so these
- * are the request sizes, not the sizes the head ends up moving.
+ * Zoom used to default to half of pan's, because the PIXY zoom range is narrow and a step
+ * that looks reasonable on pan walks straight past the useful part of it. Both were lowered
+ * to 1 on 2026-10-12 at the user's request: a key that has never been configured should move
+ * as little as it can, and anything else is a deliberate choice in the property inspector.
  *
- * Measured on the camera, see PROJECT_CONTEXT.md section 43: Pan 10 -> 20, Tilt -9 -> 36
- * at 45, Zoom 150 -> 145. Zoom tops out at 150, which is why its step is half as large.
+ * The controller clamps every value to the hardware range, so this is a request size, not
+ * the size the head ends up moving. Measured on the camera, see PROJECT_CONTEXT.md section
+ * 43: Pan 10 -> 20, Tilt -9 -> 36 at 45, Zoom 150 -> 145.
  */
-export const DEFAULT_MOVE_STEP = 10;
-export const DEFAULT_ZOOM_STEP = 5;
+export const DEFAULT_MOVE_STEP = 1;
 
 export const DEFAULT_STEP_SIZE = 1;
 

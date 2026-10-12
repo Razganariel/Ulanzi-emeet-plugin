@@ -14,7 +14,7 @@
  * limit does nothing instead of wrapping to the other end.
  */
 
-import { AXIS, ACTION, DEFAULT_MOVE_STEP, DEFAULT_ZOOM_STEP, PAN_DIRECTION } from '../core/constants.js';
+import { AXIS, ACTION, DEFAULT_MOVE_STEP, PAN_DIRECTION } from '../core/constants.js';
 import { driverPolarity, stepSize } from '../core/params.js';
 
 /** action uuid -> [axis, physical direction] */
@@ -29,10 +29,10 @@ const MOVE_BY_UUID = Object.freeze({
 
 export const uuids = Object.keys(MOVE_BY_UUID);
 
-/** Zoom's default is half of pan's, because its usable range is narrower. */
+/** One default for every axis: a step the user has not chosen stays at the minimum. */
 export function defaultsFor(uuid) {
   const [axis] = MOVE_BY_UUID[uuid] || [];
-  const defaults = { stepSize: axis === AXIS.ZOOM ? DEFAULT_ZOOM_STEP : DEFAULT_MOVE_STEP };
+  const defaults = { stepSize: DEFAULT_MOVE_STEP };
   // Pan is the one axis whose direction the user gets to choose, so its default is seeded
   // like any other setting: the panel shows it, and a key that has never been touched still
   // moves the way the panel says it does.

@@ -295,6 +295,47 @@ Pour chaque étape :
 
 Ne pas développer tout le plugin avant d'avoir validé le contrôle PIXY indépendant d'Ulanzi.
 
+## Écriture des fichiers
+
+Ajouté le 2026-10-12 après une série d'incidents. Chacun a produit ou failli produire
+une régression, et aucun n'aurait été visible dans un diff de nombres de lignes.
+
+1. **Ne jamais écrire un fichier du dépôt avec PowerShell.** `Out-File`, `Set-Content`,
+   `>>` et les here-strings passent par la page de code de la console : `chaîne` devient
+   `cha├«ne`. Écrire par un script **Node ou Python**, en binaire, avec l'encodage
+   explicite. C'est aussi ce qui a doublé `PROJECT_CONTEXT.md` : un `Split` sur `\r\n`
+   d'un fichier en `\n` renvoie un seul élément, et l'écriture se fait deux fois.
+
+2. **Vérifier l'intégrité après chaque écriture d'un fichier de texte.** recherche
+   d'octets `NUL` et de caractères de contrôle `0x00`-`0x1F`, plus un contrôle des
+   sections si le fichier est structuré. Un octet NUL ne se voit ni dans un diff ni à
+   l'écran : il faut le chercher.
+
+3. **Séparer le contenu du code.** Un fichier Markdown écrit depuis un littéral JavaScript
+   oblige à échapper chaque accent grave ; l'écriture du script a déjà transformé des
+   backticks en octets NUL. Écrire le texte à part, le lire, le coller.
+
+4. **Un script d'audit ne doit pas écrire, sauf argument explicite.** Mesurer d'abord,
+   rapporter, et n'écrire qu'après. Un audit qui réencode les fichiers alors qu'il
+   annonce « --ecrire » facultatif réécrit 25 fichiers pour rien : ici 17 avaient
+   grossi, l'audit lui-même était le défaut.
+
+5. **Toujours comparer avant/après sur le fond, pas sur la taille.** Une
+   re-compression sans perte change les octets et doit laisser l'image identique ;
+   seul `ImageChops.difference` le prouve. Et ne retenir un encodage que s'il est
+   strictement plus petit : la plupart du temps l'original est déjà bon.
+
+6. **`npm.cmd`, pas `npm`.** `npm` résout vers `npm.ps1`, bloqué par la politique
+   d'exécution de la machine.
+
+7. **Passer par un fichier pour tout script non trivial.** Un script inline containing
+   des accolades ou des accents échoue sur l'analyseur PowerShell, avec un message qui
+   désigne la mauvaise ligne.
+
+8. **Penser à l'historique, pas seulement au fichier courant.** Un journal décrit ce
+   qu'il a constaté à sa date. Le corriger en douce ment sur le passé ; le barrer et le
+   renvoyer vers la section qui tranche laisse la trace et évite la relecture.
+
 ## Critère de réussite final
 
 Le projet sera considéré fonctionnel lorsque :

@@ -1452,8 +1452,8 @@ Le pas de rotation des encodeurs était trop élevé. L'utilisateur a demandé u
 
 ## Limites / statuts
 
-- LIKELY : Ulanzi Studio charge les settings par action via `didReceiveSettings` ; à confirmer par un test utilisateur réel (redémarrer Ulanzi Studio).
-- UNVERIFIED : changement de `stepSize` dans le Property Inspector pendant que Studio tourne (mise à jour à chaud).
+- ~~LIKELY : Ulanzi Studio charge les settings par action via `didReceiveSettings` ; à confirmer par un test utilisateur réel (redémarrer Ulanzi Studio).~~ **Fermé par le §61** : les panneaux s'affichent et le réglage du stepSize fonctionne.
+- ~~UNVERIFIED : changement de `stepSize` dans le Property Inspector pendant que Studio tourne (mise à jour à chaud).~~ **Fermé par le §61** : le réglage a été changé dans le panneau, Studio en marche.
 - Le Property Inspector ne s'affiche que pour les actions encodeur (pas pour les boutons Keypad).
 
 ---
@@ -1495,8 +1495,8 @@ Pour les boutons « positions », utiliser deux fonctionnements : appui court (r
 ## Statuts
 
 - CONFIRMED : déclenchement court/long dans le plugin (timers + keyup), sauvegarde et rappel réels via UVC.
-- LIKELY : Ulanzi Studio envoie bien `keyup` en appui réel sur le D200X (le SDK l'expose ; à confirmer au test utilisateur).
-- LIKELY : la durée choisie dans le Property Inspector est bien fournie par `didReceiveSettings` au chargement de page.
+- ~~LIKELY : Ulanzi Studio envoie bien `keyup` en appui réel sur le D200X (le SDK l'expose ; à confirmer au test utilisateur).~~ **Fermé par le §61** : au §54, un appui court rappelle un preset et un appui long l'enregistre, sur l'appareil.
+- ~~LIKELY : la durée choisie dans le Property Inspector est bien fournie par `didReceiveSettings` au chargement de page.~~ **Fermé par le §61** : l'appui long se déclenche au seuil choisi, sur l'appareil.
 - Remarque : les 4 actions supprimées (setstart, savepreset1/2/3) ne sont plus disponibles ; un profil existant qui les utilisait devra être réaffecté manuellement.
 
 ---
@@ -1572,7 +1572,8 @@ Demande utilisateur : les boutons de déplacement doivent eux aussi avoir un pas
 - CONFIRMED : Tilt Up `stepSize=45` → Tilt -9 → 36 (+45).
 - CONFIRMED : Zoom Out sans réglage → Zoom 150 → 145 (-5, défaut ZOOM_STEP).
 - CONFIRMED : Zoom Out `stepSize=20` → Zoom 150 → 130 (-20).
-- Note : Zoom In `stepSize=20` n'a pas été concluant car la caméra était déjà au maximum (Zoom=150).
+  - Note : Zoom In `stepSize=20` n'a pas été concluant car la caméra était déjà au maximum
+    (Zoom=150). 20 est une valeur de test, pas un défaut : le défaut du zoom était 5 (voir §58).
 
 ## §44 — Icônes presets/start et icône principale du plugin
 
@@ -1614,8 +1615,8 @@ Décision utilisateur (2026-09-26) : `D:\Projets\v2-modes-fonctionnels` n'est pl
 
 ## Statuts
 
-- LIKELY : les nouveaux visuels s'affichent dans Ulanzi Studio après redémarrage ; à confirmer visuellement par l'utilisateur (redémarrage requis pour recharger le manifest).
-- LIKELY : l'écran du knob D200X affiche l'icône dynamique par axe ($UA1 + setFeedback icon) ; à confirmer visuellement sur l'appareil (le mock ne teste que le protocole, pas le rendu).
+- ~~LIKELY : les nouveaux visuels s'affichent dans Ulanzi Studio après redémarrage ; à confirmer visuellement par l'utilisateur (redémarrage requis pour recharger le manifest).~~ **Fermé par le §61** : icônes propres dans Ulanzi Studio et sur le Stream Deck.
+- ~~LIKELY : l'écran du knob D200X affiche l'icône dynamique par axe ($UA1 + setFeedback icon) ; à confirmer visuellement sur l'appareil (le mock ne teste que le protocole, pas le rendu).~~ **Fermé par le §61** : les icônes des boutons et des knobs s'affichent bien.
 
 ---
 
@@ -1688,10 +1689,7 @@ explicitement si un inspector référence un fichier absent de la sortie.
 - CONFIRMED : `manifest.json` ne contenait plus qu'un seul fichier corrompu par une
   lecture/écriture Latin-1 d'un UTF-8 (§116, `d<2 octets U+FFFD>placement`). Corrigé en `déplacement`.
   Les 41 autres fichiers texte du dépôt ne contiennent aucun U+FFFD.
-- UNVERIFIED : le plugin n'a pas été relancé dans Ulanzi Studio après restructuration.
-  La validation matérielle (§29 OBS, §33 HID, §34 presets) date d'avant et reste valable
-  sur le plan fonctionnel, mais les chemins d'icônes (`Images/` → `images/`) et le
-  `CodePath` n'ont pas été revus par l'hôte. À confirmer au prochain démarrage de Studio.
+- ~~UNVERIFIED : le plugin n'a pas été relancé dans Ulanzi Studio après restructuration. La validation matérielle (§29 OBS, §33 HID, §34 presets) date d'avant et reste valable sur le plan fonctionnel, mais les chemins d'icônes (`Images/` → `images/`) et le `CodePath` n'ont pas été revus par l'hôte. À confirmer au prochain démarrage de Studio.~~ **Fermé par le §61** : les 19 actions fonctionnent sur le D200X, icônes comprises, donc les chemins et le CodePath sont bons.
 - ~~LIKELY : `manifest.json` gagnerait à passer `Images/` en SVG comme les deux autres
   plugins~~ — **REJECTED, voir §56** : une conversion PNG → SVG a été faite puis
   mesurée. Elle ne produit aucun tracé, seulement une enveloppe `<image>` en base64.
@@ -1778,11 +1776,7 @@ Chacun de ces points était observable, pas théorique.
 - CONFIRMED : 
 pm run build produit un bundle complet ; 15 modules de service et 1 module
   d'inspector parsés par le build.
-- UNVERIFIED : **rien de tout cela n'a été rejoué sur la caméra réelle ni dans Ulanzi
-  Studio.** Les validations matérielles des §28, §29, §33 et §34 restent valables sur le
-  plan fonctionnel, mais les corrections de cette section sont vérifiées par test, pas par
-  la caméra. À confirmer au prochain essai sur la PIXY, en particulier le délai de 4 s et
-  la reconstruction du bridge.
+- ~~UNVERIFIED : **rien de tout cela n'a été rejoué sur la caméra réelle ni dans Ulanzi Studio.** Les validations matérielles des §28, §29, §33 et §34 restent valables sur le plan fonctionnel, mais les corrections de cette section sont vérifiées par test, pas par la caméra. À confirmer au prochain essai sur la PIXY, en particulier le délai de 4 s et la reconstruction du bridge.~~ **Fermé par le §61** : rejoué sur la caméra, y compris le délai de 4 s et la reconstruction du pont (voir §59 et §60).
 - ~~LIKELY : manifest.json gagnerait à passer images/ en SVG comme les deux autres
   plugins~~ — **REJECTED, voir §56** : conversion mesurée, aucun tracé produit,
   + 64 % de poids. On garde les PNG.
@@ -1875,7 +1869,7 @@ pm run build produit un bundle complet (15 modules de
   service, 1 module d'inspector parsés).
 - CONFIRMED : 
 pm run mock démarre et affiche son invite.
-- UNVERIFIED : inchangé - tout ce qui demande la caméra ou le D200X. Voir §47.
+- ~~UNVERIFIED : inchangé - tout ce qui demande la caméra ou le D200X. Voir §47.~~ **Fermé par le §61**.
 ---
 
 # 49 - Sens reel des axes, mesure sur la camera (2026-10-11)
@@ -1938,8 +1932,7 @@ P3 de l'audit (debranchement, modes en ecriture seule, saut de camera au demarra
 
 - CONFIRMED : polarite mesuree sur la camera pour les trois axes, boutons et encodeurs.
 - CONFIRMED : 105 tests passent ; le build produit un bundle complet.
-- UNVERIFIED : le resultat n'a pas ete revérifié apres correction - la correction ellememe
-  n'est verifiee que par test. A confirmer au prochain essai sur la PIXY.
+- ~~UNVERIFIED : le resultat n'a pas ete revérifié apres correction - la correction ellememe n'est verifiee que par test. A confirmer au prochain essai sur la PIXY.~~ **Fermé par le §61** : au §54, l'inversion du pan est vérifiée sur les boutons et les encodeurs.
 ---
 
 # 50 - Le pan de la PIXY contredit la convention documentee (2026-10-11)
@@ -2062,9 +2055,9 @@ touches Pan constatera que l'encodeur PTZ, lui, garde le sens normal quand il es
   echouer 3 tests ; le rendre applicable a tous les axes fait echouer le test qui verifie
   que Tilt et Zoom l'ignorent.
 - CONFIRMED : le champ n'apparait que sur les trois panneaux pan.
-- UNVERIFIED : le comportement dans Ulanzi Studio — le select n'a pas ete ouvert sur la
-  machine. La valeur voyage par le canal habituel (didReceiveSettings), deja couvert par
-  les tests, mais le rendu du panneau n'a pas ete vu.
+- ~~UNVERIFIED : le comportement dans Ulanzi Studio — le select n'a pas ete ouvert sur la
+  machine.~~ **Fermé par le §60** : le rendu des Property Inspectors est bon, aucun problème de mise
+  en page ni d'affichage. Le canal `didReceiveSettings` ne fait donc pas que du code Covered.
 - LIKELY : un utilisateur choisira "inverse" sur les boutons Pan et remarquera que
   l'encodeur PTZ ne suit pas. A confirmer, puis etendre si besoin.
 ---
@@ -2127,7 +2120,7 @@ qu'a certains axes doit avoir son propre panneau**, sinon il apparait la ou il n
 - CONFIRMED : les quatre actions qui bougent le panoramique - Pan Left, Pan Right,
   Pan Encoder, PTZ Encoder - exposent le reglage ; les autres ne l'exposent pas.
 - CONFIRMED : le reglage ne modifie ni Tilt ni Zoom, sur aucun des quatresencodeurs.
-- UNVERIFIED : le rendu des panneaux dans Ulanzi Studio, comme au §51.
+- ~~UNVERIFIED : le rendu des panneaux dans Ulanzi Studio, comme au §51.~~ **Fermé par le §60**.
 ---
 
 # 53 - Cause reelle du reset du reglage : les panneaux n'ont jamais relu (2026-10-11)
@@ -2215,9 +2208,10 @@ Verifie par mutation :
 - CONFIRMED : les panneaux n'avaient jamais demande leurs reglages ; desormais ils le font.
 - CONFIRMED : un champ non touche n'est plus renvoye a l'hote.
 - CONFIRMED : 125 tests passent.
-- UNVERIFIED : le comportement dans Ulanzi Studio. C'est la premiere fois que le cycle
+- ~~UNVERIFIED : le comportement dans Ulanzi Studio. C'est la premiere fois que le cycle
   complet est couvert par des tests, mais c'est aussi la premiere fois que le host est
-  suppose repondre a une demande getSettings issue d'un panneau de ce plugin.
+  suppose repondre a une demande getSettings issue d'un panneau de ce plugin.~~ **Fermé par le §60** :
+  le réglage du stepSize fonctionne et le rendu des panneaux est bon.
 ---
 
 # 54 - Validation du plugin refactorise sur la camera et sur le D200X (2026-10-11)
@@ -2261,23 +2255,29 @@ Recouvrement des UNVERIFIED des §47, §49 et §53.
   cyclique.
 - CONFIRMED : le §53 - les panneaux relisent leurs reglages, et un choix n'est plus ecrase
   ni par un autre champ ni a la reouverture.
-- LIKELY : le §53 corrigeait aussi le stepSize, qui n'a jamais ete relu lui non plus. Non
-  verifie explicitement par l'utilisateur.
-- UNVERIFIED : **l’icône d’axe affichée sur l’écran du knob.** Les encodeurs sont
-  confirmés comme *fonctionnels* (§54), mais l’affichage du knob lui-même, `$UA1` +
-  `setFeedback`, reste au statut LIKELY des §36 et §44 : le protocole est vérifié,
-  le rendu sur l’appareil ne l’a jamais été.
+- ~~LIKELY : le §53 corrigeait aussi le stepSize, qui n'a jamais ete relu lui non plus. Non
+  verifie explicitement par l'utilisateur.~~ **Fermé par le §60** : le réglage du stepSize
+  fonctionne, et le panneau le relit.
+- ~~UNVERIFIED : **l’icône d’axe affichée sur l’écran du knob.** Les encodeurs sont
+  confirmés comme *fonctionnels* (§54), mais l’affichage du knob lui-même, `$UA1` + `setFeedback`,
+  reste au statut LIKELY des §36 et §44 : le protocole est vérifié, le rendu sur l’appareil ne l’a
+  jamais été.~~ **Fermé par le §60** : les icônes des boutons et des knobs s'affichent bien, sur
+  Ulanzi Studio comme sur le Stream Deck.
 - ~~`core/ui.js` et `core/shutdown.js` sans test comportemental propre~~ — **résolu par
   le §55**, qui leur ajoute 20 cas. Ce que le §54 signalaità l’époque : `ui.js` était
   seulement exercé indirectement, sans rien garantir sur le layout appliqué une fois par
   clé ni sur la survie des appels de dessin à un hôte trop ancien, et rien n’affirmait que
   l’arrêt du helper était bien câblé.
-- UNVERIFIED : cohabitation OBS + plugin en meme temps (le §29 a teste OBS + sonde, jamais
-  OBS + plugin installe).
-- UNVERIFIED : debranchement de la camera en cours d'utilisation, et le delai de 4 s du
-  bridge avec sa reconstruction.
-- UNVERIFIED : saut de la camera a la position start au demarrage du bridge.
-- UNVERIFIED : Zoom In a stepSize=20 (§43, non concluant a l'epoque, camera au maximum).
+- ~~UNVERIFIED : cohabitation OBS + plugin en meme temps (le §29 a teste OBS + sonde, jamais
+  OBS + plugin installe).~~ **Fermé par le §60** : la cohabitation entre le plugin et OBS fonctionne.
+- ~~UNVERIFIED : debranchement de la camera en cours d'utilisation, et le delai de 4 s du
+  bridge avec sa reconstruction.~~ **Fermé par le §60** : rebrancher ne perd pas le contrôle, et le
+  délai de 4 s est confirmé par conséquence — `restart()` n'est atteint que par ce chemin, et
+  la commande suivante a fonctionné sans redémarrer Studio.
+- ~~UNVERIFIED : saut de la camera a la position start au demarrage du bridge.~~ **Fermé par le §60**.
+- ~~UNVERIFIED : Zoom In a stepSize=20 (§43, non concluant a l'epoque, camera au maximum).~~ **Voir §58** : 20 n'est ni un défaut ni un enregistrement de position.
+  C'était une **valeur de test** du §43, choisie pour mesurer la réponse du pilote ;
+  le défaut du zoom était 5. La ligne ci-dessus se lisait comme si 20 était ce défaut.
 
 ---
 
@@ -2357,12 +2357,14 @@ resultat etait un echec sur un test correct.
   `actions.test.js` et le registre, qui est leur voie d'acces prevue ; ils n'ont pas de
   fichier de test propre, exactement comme chez le projet frere ou six actions partagent un
   seul jeu de cas. Les onze autres ont un fichier qui les nomme.
-- UNVERIFIED : process.on('exit') ne peut pas faire de travail asynchrone, et sous Windows
+- ~~UNVERIFIED : `process.on('exit')` ne peut pas faire de travail asynchrone, et sous Windows
   Node n'emet pas SIGTERM a la fermeture d'une fenetre. Le chemin propre est donc
-  probablement Ctrl-C et non la fermeture de Studio. Non verifie, et hors perimetre ici :
-  aucun test ne peut etablir ce que fait l'hote a la fermeture.
-
----
+  probablement Ctrl-C et non la fermeture de Studio. Non verifie, et hors perimetre
+  ici : aucun test ne peut etablir ce que fait l'hote a la fermeture.~~ — **Faux, voir §59** :
+  la fermeture de Studio fonctionne. Le helper sort sur la fin de flux de stdin, mesuré à 62 ms,
+  code 0, sans avoir jamais reçu `quit`. Le `quit` du gestionnaire `exit` est donc sans effet
+  **et sans conséquence** : ce n'est pas lui qui libère la caméra. Rien à corriger, et surtout
+  pas de Job Object ni de `kill` de secours à ajouter : le cas est déjà couvert.
 
 # 56 - Icônes : le passage en SVG est REJECTED
 
@@ -2506,3 +2508,230 @@ Verification : les 9 ecrits ont ete compares a `HEAD` par `ImageChops.difference
 - CONFIRMED : `gradient-ptz.png`, le plus recompressé (−64 %), s'affiche correctement sous
   Ulanzi Studio et sur le Stream Deck (validé par l'utilisateur le 2026-10-12, après
   réinstallation). La recompression sans perte ne casse donc rien au rendu.
+
+---
+---
+
+# 58 - Retour utilisateur du 2026-10-12, et le pas par défaut passe à 1
+
+## Ce qui a été validé
+
+Après réinstallation du plugin, test sur le D200X et sous Ulanzi Studio :
+
+- CONFIRMED : **aucun problème d'affichage**, ni dans Ulanzi Studio ni sur le Stream Deck.
+  Cela ferme l'UNVERIFIED du §54 sur l'icône d'axe rendue sur l'écran du knob, qui était
+  resté au statut LIKELY depuis les §36 et §44 : le protocole était vérifié, le rendu sur
+  l'appareil ne l'avait jamais été.
+- CONFIRMED : **les 19 actions fonctionnent**.
+- CONFIRMED : **débrancher et rebrancher la caméra ne fait pas perdre le contrôle**.
+- CONFIRMED : **le réglage du stepSize fonctionne**.
+
+Ces trois points — la cohabitation OBS + plugin, le saut à la position start et le délai de 4 s —
+ont ensuite été validés eux aussi, voir le §60.
+
+## Correction : « Zoom In à stepSize=20 » n'était pas un défaut
+
+Cette question a été posée, et la réponse est non : ce n'est **ni une valeur par défaut ni
+un enregistrement de position**. C'était une **valeur de test**, choisie au §43 pour mesurer
+la réponse du pilote sur chaque axe. Le §43 le dit lui-même :
+
+> Zoom Out `stepSize=20` → Zoom 150 → 130 (-20).
+> **Zoom In `stepSize=20` n'a pas été concluant car la caméra était déjà au maximum.**
+
+Le défaut du zoom était 5 avant ce jour. Le 20 n'était qu'une option de la liste déroulante.
+La ligne du §54 est reformulée pour le dire, plutôt que de laisser la question se poser.
+
+## Le pas par défaut passe à 1
+
+Demandé par l'utilisateur. Il était de 10 pour le panoramique et l'inclinaison, et de 5 pour
+le zoom — deux valeurs mesurées sur la caméra, §43.
+
+- `DEFAULT_MOVE_STEP` passe de 10 à 1. `DEFAULT_ZOOM_STEP` (5) est **supprimé** : les deux
+  constantes ne se distinguaient plus, et une branche dont les deux côtés sont égaux ne
+  décrit plus rien. `actions/move.js` n'a plus qu'un seul défaut à appliquer.
+- Les trois panneaux `pixyMove` présélectionnent l'option 1, comme les trois panneaux
+  `pixyEncoder` le faisaient déjà.
+- Conséquence : un bouton jamais configuré bouge dix fois moins qu'avant. C'est le choix
+  demandé ; la liste déroulante offre toujours 1 à 30 et une valeur jusqu'à 100 est acceptée.
+
+Sept tests figeaient les anciennes valeurs, répartis sur deux fichiers. Ils ont été mis à
+jour, et celui qui vérifiait que le défaut suivait l'axe vérifie désormais les trois axes.
+
+## Le test qui manquait
+
+La demande portait sur **deux nombres qui vivent dans deux fichiers** : l'option `selected`
+du panneau, et le défaut que le service applique quand rien n'est enregistré. Rien ne les
+reliait. Les 146 tests passaient, le code était déjà à 1, les trois panneaux affirmaient
+encore 10 et 5, et aucun test ne l'aurait vu : chaque fichier était correct pris séparément.
+
+`property-inspector.test.js` a maintenant un cas qui lit chaque panneau nommé par le
+manifeste, en extrait l'option marquée `selected`, et la compare au `defaultsFor` du module
+qui sert les actions de ce panneau. Vérifié par mutation : remettre le panneau de zoom à 5
+fait échouer ce test, et lui seul.
+
+---
+---
+
+# 59 - Le helper se termine bien tout seul
+
+Clôt l'UNVERIFIED du §55 sur `process.on('exit')`.
+
+## Ce que l'observation ne disait pas
+
+L'utilisateur a fermé Ulanzi Studio et a observé que `PixyController.exe` se ferme avec. Cela
+établit le résultat, pas la cause. Deux mécanismes l'expliquent, et ils n'appellent pas la
+même suite :
+
+- la commande `quit` que le gestionnaire `exit` envoie (`shutdown.js:42`) partirait à temps ;
+- le helper verrait la fin de flux sur stdin et sortirait de lui-même.
+
+Le journal privilégiait le premier. Il ne peut pas : l'événement `exit` de Node n'autorise que
+du travail synchrone, et `child.stdin.write` est asynchrone. Sous Windows, fermer une fenêtre
+n'émet ni SIGTERM ni SIGINT, donc les gestionnaires de `shutdown.js:43` à `48` ne servent
+qu'au Ctrl-C en console.
+
+## Le test
+
+`serve` est le seul mode qui lit stdin, donc le seul testable ainsi. Lancé, laissé tourner
+1,5 s, puis **stdin fermé sans envoyer `quit`** :
+
+```
+le helper a sorti 62 ms apres la fermeture de stdin, sans avoir recu quit
+  code de sortie : 0, signal : null
+```
+
+Soit le temps que `Console.In.ReadLine()` (`Program.cs:187`) renvoie `null`, que la boucle
+sorte, que `Serve()` rende, que `Main` rende (ligne 155) et que `ReleaseComObject` (lignes
+274-275) libère le handle COM de la caméra.
+
+La position de départ a bien été appliquée au passage, ce qui est le comportement normal du
+bridge : `Pan: set 10 (verify=10)`, `Tilt: set -9 (verify=-9)`, `Zoom: set 100 (verify=100)`,
+`start position 'start' applied, exit=0`.
+
+## CONFIRMED
+
+- Le helper sort sur la fin de flux, avec le code 0, sans avoir rien reçu.
+- Chaîne complète : Ulanzi se ferme → le processus Node du plugin meurt → son extrémité du
+  tuyau se ferme → le helper voit la fin de flux → il sort → la caméra est libérée.
+- L'écriture asynchrone de `quit` dans le gestionnaire `exit` est **sans effet, et sans
+  conséquence**. Elle n'est pas la cause du bon fonctionnement.
+
+## Ce qu'il ne faut pas faire
+
+Rien à corriger ici. Un Job Object Windows, une attente synchrone, un `child.kill()` de
+secours : tout cela ajoute de la complexité pour protéger un cas que la fin de flux couvre déjà.
+
+Le §55 concluait que « le chemin propre est probablement Ctrl-C et non la fermeture de
+Studio ». C'est faux, et la note est barrée pour que personne ne s'appuie dessus plus tard.
+
+Ce qui reste vrai, et qui n'a plus d'incidence sur le comportement : aucun test ne peut
+établir ce que l'hôte fait au-delà de la fermeture du processus Node.
+
+---
+---
+
+# 60 - Derniers points validés sur le matériel
+
+## Ce que l'utilisateur a confirmé
+
+Test du 2026-10-12, plugin installé, D200X, Ulanzi Studio, caméra branchée puis débranchée en
+cours d'utilisation :
+
+- CONFIRMED : **les icônes sont propres**, dans Ulanzi Studio et sur le Stream Deck — aussi
+  bien celles des boutons que celles des knobs, dont l'icône d'axe dynamique.
+- CONFIRMED : **la cohabitation entre le plugin et OBS fonctionne**.
+- CONFIRMED : **le rendu des Property Inspectors est bon**, aucun problème de mise en page ni
+  d'affichage.
+- CONFIRMED : **le saut à la position start fonctionne**.
+- CONFIRMED : **débrancher et rebrancher ne perd pas le contrôle**, et le délai de 4 s joue son
+  rôle — voir ci-dessous, il n'a pas eu besoin d'être chronométré.
+
+Cela ferme les points encore ouverts des §51, §52, §53 et §54.
+
+## « Position center puis mouvement » : c'est la position start, pas un center
+
+Signalé par l'utilisateur comme une chose à expliquer. Ce n'est pas une commande `center` :
+le pont n'en appelle jamais. La chaîne est celle du délai d'expiration.
+
+1. Caméra débranchée, appui sur Pan : `child.stdin.write` réussit en local, mais aucune
+   réponse ne vient. Au bout de 4 s, `bridge.js:143-150` rejette la requête et appelle
+   `restart()`, qui se contente de `discardChild()` — **sans** relancer de remplacement, à
+   dessein (`bridge.js:240-242`) : `serve` applique la position start dès son démarrage, donc
+   une relance immédiate déplacerait la caméra sans personne au bouton.
+2. Caméra rebranchée, nouvel appui sur Pan : le helper repart, `serve` applique la position
+   start, **puis** le mouvement s'exécute.
+
+Ce que vaut cette position, sur cette machine, `%APPDATA%\PixyController\presets.json` :
+
+```json
+{"start":"start","presets":{"start":{"pan":10,"tilt":-9,"zoom":100}, ...}}
+```
+
+pan 10 sur une plage -150..+150, tilt -9 sur -90..90 : presque centré, d'où l'apparence d'un
+recentrage. La commande `center` n'est appelée que par le bouton Center et par la pression
+d'un encodeur cyclique ; `grep` sur `plugin/service` ne trouve aucun autre appel.
+
+**À savoir** : après n'importe quel redémarrage du pont, la première commande ramène la
+caméra sur la position start. C'est voulu, mais si ce n'est pas souhaité, c'est la valeur
+enregistrée sous `"start"` qu'il faut changer — celle qu'enregistre l'appui long sur Start.
+
+## Le délai de 4 s est confirmé par conséquence, pas par mesure
+
+L'utilisateur a noté que « le bouton n'affiche aucune erreur ». Cela n'apprend rien et ne peut
+rien apprendre : le délai ne produit qu'une erreur **journalisée**
+(`camera bridge timed out after 4000ms`, `bridge.js:146`), jamais une erreur sur le deck. Un
+délai qui marche et un pont bloqué se ressemblent donc exactement sur le bouton.
+
+Mais l'observation suivante vaut preuve. `restart()` n'est appelé que depuis le chemin
+d'expiration (`bridge.js:149`). Sans ce délai, `this.inFlight = null` (ligne 145) n'aurait
+jamais eu lieu, le créneau resterait occupé, et **toute commande ultérieure aurait été
+silencieusement abandonnée jusqu'au redémarrage d'Ulanzi Studio**. Or l'utilisateur a
+rebranché, appuyé sur Pan, et le mouvement a eu lieu — sans redémarrer Studio.
+
+Le délai s'est donc déclenché, le helper a été remplacé, et la commande suivante a reconstruit
+le pont. Seule la durée exacte reste non mesurée : c'est une constante, et 4 s contre 3,9 s sur
+cette machine ne se distingue pas à l'œil.
+
+---
+---
+
+# 61 - Dernière passe : ce que les essais des 11 et 12 octobre ont couvert
+
+## Ce qui est barré, et par quoi
+
+Ces points dataient des 11 et 12 octobre 2026 : ils demandaient un essai sur la PIXY et dans
+Ulanzi Studio que le plugin refactorisé n'avait pas encore subi. Les essais du 11 (§54) et du
+12 (§58, §59, §60) l'ont fait, et leur conclusion est écrite dans ces sections.
+
+| Point | Section | Tranché par |
+|---|---|---|
+| Ulanzi charge les réglages par action via `didReceiveSettings` | §38 | §60 — les panneaux s'affichent, le réglage du stepSize fonctionne |
+| Changement de `stepSize` à chaud, Studio en marche | §38 | §60 — idem |
+| `keyup` émis en appui réel sur le D200X | §39 | §54 — un appui court rappelle, un appui long enregistre |
+| La durée d'appui long vient bien du panneau | §39 | §54 et §60 |
+| Les nouveaux visuels s'affichent après redémarrage | §40 | §60 — icônes propres dans Studio et sur le Stream Deck |
+| L'icône d'axe s'affiche sur l'écran du knob | §40 | §60 |
+| Le plugin n'a pas été relancé après restructuration | §46 | §54 et §60 — les 19 actions fonctionnement sur le D200X |
+| Rien de la refactorisation rejoué sur la caméra | §47 | §54, §59, §60 — y compris le délai de 4 s et la reconstruction du pont |
+| Inchangé, tout ce qui demande la caméra ou le D200X | §48 | idem |
+| Le résultat n'a pas été revérifié après la correction du pan | §49 | §54 — inversion du pan corrigée sur les boutons et les encodeurs |
+
+## Ce qui reste ouvert, et pourquoi
+
+Trois points, volontairement conservés.
+
+- **§50 — l'intention d'EMEET**, et le comportement d'EMEET Studio pour le pan. Non
+  résolubles depuis cette machine : aucune source EMEET n'y est disponible, et le projet n'a
+  pas EMEET Studio dans son architecture. Ce ne sont pas des tests manquants, ce sont des
+  informations absentes.
+- **§51 — la note d'usage sur « inverse »** : un utilisateur qui choisira « inversé » sur les
+  boutons Pan remarquera que l'encodeur PTZ ne suit pas. C'est une observation d'expérience,
+  pas une correction en attente ; elle attend d'être constatée.
+
+## Ce que ce décompte ne dit pas
+
+Treize points de statut ouverts au début de cette passe, trois après. Aucun n'a été fermé par
+un test automatique : tous l'ont été par le matériel, sur la PIXY et sur le D200X, par
+l'utilisateur. C'est la partie du projet qu'aucune suite de tests ne remplace — et la
+raison pour laquelle les 147 tests ne doivent jamais être lus comme une garantie de
+comportement sur la caméra.

@@ -242,3 +242,45 @@ test('every panel in the manifest loads this script', async () => {
     assert.ok(!html.includes('./inspector.js'), `${panel} has no script of its own`);
   }
 });
+test('every panel preselects the step the service will really use', async () => {
+  // The two numbers live in two files and nothing related them: the `selected` option in
+  // the markup, and the default the service falls back on. They agreed by coincidence for
+  // months. When the user asked for a step of 1 everywhere, the code moved and the three
+  // move panels still said 10 and 5 - and all 146 tests still passed, because each file was
+  // correct taken on its own.
+  const manifest = JSON.parse(
+    await readFile(path.join(HERE, '..', 'plugin', 'manifest.json'), 'utf8')
+  );
+  const { defaultsFor } = await import('../plugin/service/actions/index.js');
+
+  const parPanneau = new Map();
+  for (const action of manifest.Actions) {
+    const panneau = action.PropertyInspectorPath;
+    if (!panneau) continue;
+    if (!parPanneau.has(panneau)) parPanneau.set(panneau, []);
+    parPanneau.get(panneau).push(action.UUID);
+  }
+
+  let reliees = 0;
+  for (const [panneau, uuids] of parPanneau) {
+    const html = await readFile(path.join(HERE, '..', 'plugin', panneau), 'utf8');
+    const select = html.match(/<select[^>]*name="stepSize">([\s\S]*?)<\/select>/);
+    if (!select) continue; // ce panneau ne regle pas le pas
+
+    const choisi = select[1].match(/<option value="(\d+)"\s+selected>/);
+    assert.ok(choisi, `${panneau} a une option stepSize marquee selected`);
+
+    for (const uuid of uuids) {
+      const defaut = defaultsFor(uuid).stepSize;
+      if (defaut === undefined) continue; // cette action ne deplace rien
+      assert.equal(
+        Number(choisi[1]),
+        defaut,
+        `${panneau} affiche ${choisi[1]}, mais ${uuid} bougera de ${defaut}`
+      );
+      reliees += 1;
+    }
+  }
+
+  assert.ok(reliees >= 6, `les panneaux et les actions ont ete relies (${reliees})`);
+});

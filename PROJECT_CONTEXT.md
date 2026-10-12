@@ -2735,3 +2735,76 @@ un test automatique : tous l'ont été par le matériel, sur la PIXY et sur le D
 l'utilisateur. C'est la partie du projet qu'aucune suite de tests ne remplace — et la
 raison pour laquelle les 147 tests ne doivent jamais être lus comme une garantie de
 comportement sur la caméra.
+
+---
+---
+
+# 62 - Release 1.0.0
+
+Date : 2026-10-12. Première version taguée du dépôt — il n'existait **aucun tag** avant celle-ci,
+et la 0.1.0 n'en a jamais reçu.
+
+## Pourquoi 1.0.0
+
+La 0.1.0 était un numéro de développement : rien n'était figé, le dépôt a été restructuré, le
+service a été scindé en quinze modules, la licence a été posée. Le §61 a ramené les points de
+statut ouverts de treize à trois, et les trois qui restent ne sont pas du travail en attente :
+ce sont des informations absentes (§50, sur l'intention d'EMEET, qu'aucune source de cette
+machine ne peut fournir).
+
+## Les critères de réussite du projet sont remplis
+
+Le §AGENTS.md pose sept conditions. Elles sont toutes validées, sur le matériel, par
+l'utilisateur :
+
+1. Ulanzi Studio détecte le plugin — oui, dès la première installation.
+2. Le D200X déclenche les actions — les 19 (§58).
+3. La PIXY répond au panoramique, à l'inclinaison et au zoom — et dans le bon sens (§54).
+4. Center fonctionne — un appui court rappelle un preset, un appui long l'enregistre (§54).
+5. OBS continue de capturer la vidéo — la cohabitation plugin + OBS est confirmée (§60).
+6. EMEET Studio n'est pas nécessaire — c'est l'architecture depuis le début.
+7. Aucune modification permanente du pilote Windows — le pilote UVC de Windows est utilisé tel
+   quel, via `IAMCameraControl`, et `PixyController.exe` écrit les valeurs avant de les
+   relire.
+
+## Ce qui a été changé
+
+La version est écrite **à trois endroits** — `package.json`, `plugin/package.json`,
+`plugin/manifest.json` — et `build.mjs:170` échoue si les trois ne concordent pas. C'est la
+seULE façon de rester cohérent, et le build l'a confirmé : `[build] version 1.0.0 consistent`.
+
+`INSTALL.txt` du payload **n'est pas en dur** : il est écrit par le build à partir du
+manifeste, et suit donc automatiquement. Vérifié dans le payload livré : `PIXY PTZ 1.0.0`.
+
+Le `CHANGELOG.md` a une section `[1.0.0] - 2026-10-12` ; tout ce qui s'y trouve datait de la
+période 0.1.0 et n'avait jamais été publié, faute de tag.
+
+La mention « v0.1.0 » du §33 est **inchangée** : elle dit ce qui était installé sur le D200X
+le jour de sa réception. C'est de l'histoire, pas de la version courante.
+
+## Le pipeline
+
+`npm run release` enchaîne quatre étapes, toutes passées :
+
+| Étape | Résultat |
+|---|---|
+| `sdk` | SDK déjà présent, ignoré ; les archives sont en cache dans `sdk/.cache` |
+| `native` | `PixyController.exe` et `PixyHidProbe.exe` recompilés avec `csc.exe` du .NET Framework |
+| `build` | payload de 95 fichiers, 0,5 Mo, licences tierces livrées, dépendances installées |
+| `test` | 147 tests |
+
+Le SDK est en cache, donc la release ne demande **pas** le réseau. Les binaires sont
+recompilés à chaque fois et ne sont pas épinglés : `csc.exe` grave un horodatage, deux
+compilations du même source ne sont pas comparables par empreinte.
+
+## État du payload
+
+- 95 fichiers, 0,5 Mo, aucun artefact de compilation résiduel.
+- `ulanzi-api/LICENSE` et `libs/LICENSE` présents, comme l'exige Apache-2.0 section 4.
+- `node_modules/ws` présent : sans lui le service ne démarre pas.
+- Aucune occurrence de `0.1.0` dans le payload.
+
+## Ce qui n'est pas fait
+
+Le tag `v1.0.0` et la publication sur GitHub n'ont pas été faits : `gh` n'est pas installé sur
+cette machine, et un tag se pose normalement après la fusion, pas avant.
